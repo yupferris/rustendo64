@@ -5,6 +5,7 @@ use std::path::Path;
 
 const NUM_GPR: usize = 32;
 
+#[derive(Default)]
 struct Cpu {
     reg_gpr: [u64; NUM_GPR],
     reg_fpr: [f64; NUM_GPR],
@@ -24,22 +25,7 @@ struct Cpu {
 
 impl Cpu {
     fn new() -> Cpu {
-        Cpu {
-            reg_gpr: [0; NUM_GPR],
-            reg_fpr: [0; NUM_GPR],
-
-            reg_pc: 0,
-
-            reg_hi: 0,
-            reg_lo: 0,
-
-            reg_llbit: false,
-
-            reg_fcr0: 0,
-            reg_fcr31: 0,
-
-            cp0: Cp0::new()
-        }
+        Cpu::default()
     }
 
     fn power_on_reset(&mut self) {
@@ -47,6 +33,7 @@ impl Cpu {
     }
 }
 
+#[derive(Default)]
 struct Cp0 {
     reg_index: u64,
     reg_random: u64,
@@ -75,31 +62,7 @@ struct Cp0 {
 
 impl Cp0 {
     fn new() -> Cp0 {
-        Cp0 {
-            reg_index: 0,
-            reg_random: 0,
-            reg_entry_lo0: 0,
-            reg_entry_lo1: 0,
-            reg_context: 0,
-            reg_page_mask: 0,
-            reg_wired: 0,
-            reg_bad_v_addr: 0,
-            reg_count: 0,
-            reg_entry_hi: 0,
-            reg_compare: 0,
-            reg_status: 0,
-            reg_cause: 0,
-            reg_epc: 0,
-            reg_pr_id: 0,
-            reg_config: 0,
-            reg_ll_addr: 0,
-            reg_watch_lo: 0,
-            reg_watch_hi: 0,
-            reg_x_context: 0,
-            reg_tag_lo: 0,
-            reg_tag_hi: 0,
-            reg_error_epc: 0
-        }
+        Cp0::default()
     }
 
     fn power_on_reset(&mut self) {
