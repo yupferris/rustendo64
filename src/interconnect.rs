@@ -1,3 +1,5 @@
+use std::fmt;
+
 const PIF_ROM_SIZE: usize = 2048;
 
 const RAM_SIZE: usize = 4 * 1024 * 1024;
@@ -31,5 +33,11 @@ impl Interconnect {
             // TODO
             panic!("Unrecognized address: {:#x}", addr);
         }
+    }
+}
+
+impl fmt::Debug for Interconnect {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TODO: Impl Debug for Interconnect")
     }
 }
