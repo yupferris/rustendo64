@@ -45,11 +45,35 @@ impl Cpu {
 
     pub fn power_on_reset(&mut self) {
         self.cp0.power_on_reset();
+
+        self.reg_pc = 0xffff_ffff_bfc0_0000; // TODO: Move to const
     }
 
     // TODO: Different interface
     pub fn run(&mut self) {
-        // TODO
+        loop {
+            let opcode = self.read_word(self.reg_pc);
+            panic!("Opcode: {:#x}", opcode);
+        }
+    }
+
+    fn read_word(&self, virt_addr: u64) -> u32 {
+        let phys_addr = self.virt_addr_to_phys_addr(virt_addr);
+        // TODO: Check endianness
+        self.interconnect.read_word(phys_addr as u32)
+    }
+
+    fn virt_addr_to_phys_addr(&self, virt_addr: u64) -> u64 {
+        // See Table 5-3 in the VR4300 User's Manual
+        let addr_bit_values = (virt_addr >> 29) & 0b111;
+
+        if addr_bit_values == 0b101 {
+            // kseg1
+            virt_addr - 0xffff_ffff_a000_0000
+        } else {
+            // TODO
+            panic!("Unrecognized virtual address: {:#x}", virt_addr);
+        }
     }
 }
 
