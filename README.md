@@ -1,7 +1,8 @@
 # rustendo64
 Livecoding a Nintendo 64 emulator in Rust :D
 
-TODO: Fill this out more
+## Follow along
+The entire process is currently being streamed on [Twitch](http://www.twitch.tv/ferrisstreamsstuff), and each segment is being recorded and uploaded to [this YouTube playlist](https://www.youtube.com/playlist?list=PL-sXmdrqqYYcznDg4xwAJWQgNL2gRray2). For stream times and announcements, you can check out [my Twitter](https://twitter.com/ferristweetsnow).
 
 ## Helpful tools
 - [Hex Fiend](http://ridiculousfish.com/hexfiend/)
@@ -16,3 +17,5 @@ TODO: Fill this out more
 
 ## Test ROM's
 Lac's Fire Demo (wasn't able to find a clean link)
+
+TODO: Fill this out more
