@@ -2,5 +2,6 @@
 name = "rustendo64"
 version = "0.1.0"
 authors = ["ferris <jake@fusetools.com>"]
+license = "MIT/Apache-2.0"
 
 [dependencies]
