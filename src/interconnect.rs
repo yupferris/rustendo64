@@ -25,10 +25,10 @@ impl Interconnect {
             let rel_addr = addr - 0x1fc0_0000;
             // TODO: Check endianness
             // TODO: Check out byteorder crate
-            (self.pif_rom[(rel_addr + 0) as usize] as u32) << 24 |
-            (self.pif_rom[(rel_addr + 1) as usize] as u32) << 16 |
-            (self.pif_rom[(rel_addr + 2) as usize] as u32) <<  8 |
-            (self.pif_rom[(rel_addr + 3) as usize] as u32)
+            ((self.pif_rom[(rel_addr + 0) as usize] as u32) << 24) |
+            ((self.pif_rom[(rel_addr + 1) as usize] as u32) << 16) |
+            ((self.pif_rom[(rel_addr + 2) as usize] as u32) <<  8) |
+            ((self.pif_rom[(rel_addr + 3) as usize] as u32) <<  0)
         } else {
             // TODO
             panic!("Unrecognized address: {:#x}", addr);
