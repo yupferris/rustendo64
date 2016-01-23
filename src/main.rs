@@ -1,3 +1,5 @@
+extern crate byteorder;
+
 mod n64;
 mod cpu;
 mod interconnect;

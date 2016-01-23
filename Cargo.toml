@@ -5,3 +5,4 @@ authors = ["ferris <jake@fusetools.com>"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
+byteorder = "0.4.2"
