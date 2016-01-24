@@ -68,25 +68,33 @@ impl Cpu {
 
         match opcode {
             0b001101 => {
-                // Ori
+                // ori
                 let res = self.read_reg_gpr(rs as usize) | (imm as u64);
                 self.write_reg_gpr(rt as usize, res);
             },
             0b001111 => {
-                // Lui
-                // TODO: Sign extend for upper 32 bits
-                self.write_reg_gpr(rt as usize, (imm << 16) as u64);
+                // lui
+                let value = ((imm << 16) as i32) as u64;
+                self.write_reg_gpr(rt as usize, value);
             },
             0b010000 => {
-                // Mtc0
+                // mtc0
                 let rd = (instruction >> 11) & 0b11111;
                 let data = self.read_reg_gpr(rt as usize);
                 self.cp0.write_reg(rd, data);
             },
-            _ => {
-                panic!("Unrecognized instruction: {:#x}",
-                       instruction);
+            0b100011 => {
+                // lw
+                let base = rs;
+                let offset = imm;
+
+                let sign_extended_offset = (offset as i16) as u64;
+                let virt_addr =
+                    sign_extended_offset + self.read_reg_gpr(base as usize);
+                let mem = (self.read_word(virt_addr) as i32) as u64;
+                self.write_reg_gpr(rt as usize, mem);
             }
+            _ => panic!("Unrecognized instruction: {:#x}", instruction)
         }
 
         self.reg_pc += 4;

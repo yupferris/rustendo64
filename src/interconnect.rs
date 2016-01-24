@@ -28,7 +28,7 @@ impl Interconnect {
             BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
         } else {
             // TODO
-            panic!("Unrecognized address: {:#x}", addr);
+            panic!("Unrecognized physical address: {:#x}", addr);
         }
     }
 }
