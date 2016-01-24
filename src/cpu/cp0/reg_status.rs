@@ -40,30 +40,32 @@ pub struct RegStatus {
     interrupts_enabled: bool
 }
 
-impl RegStatus {
-    pub fn write(&mut self, data: u32) {
-        self.coprocessor_usability[3] =         (data & (1 << 31)) != 0;
-        self.coprocessor_usability[2] =         (data & (1 << 30)) != 0;
-        self.coprocessor_usability[1] =         (data & (1 << 29)) != 0;
-        self.coprocessor_usability[0] =         (data & (1 << 28)) != 0;
-        self.low_power =                        (data & (1 << 27)) != 0;
-        self.additional_fp_regs =               (data & (1 << 26)) != 0;
-        self.reverse_endian =                   (data & (1 << 25)) != 0;
+impl From<u32> for RegStatus {
+    fn from(value: u32) -> Self {
+        RegStatus {
+            coprocessor_usability: [
+                (value & (1 << 28)) != 0,
+                (value & (1 << 29)) != 0,
+                (value & (1 << 30)) != 0,
+                (value & (1 << 31)) != 0],
 
-        self.diagnostic_status = data.into();
+            low_power:                        (value & (1 << 27)) != 0,
+            additional_fp_regs:               (value & (1 << 26)) != 0,
+            reverse_endian:                   (value & (1 << 25)) != 0,
 
-        self.diagnostic_status = data.into();
-        self.interrupt_mask = data.into();
+            diagnostic_status: value.into(),
+            interrupt_mask: value.into(),
 
-        self.kernel_mode_64bit_addressing =     (data & (1 <<  7)) != 0;
-        self.supervisor_mode_64bit_addressing = (data & (1 <<  6)) != 0;
-        self.user_mode_64bit_addressing =       (data & (1 <<  5)) != 0;
+            kernel_mode_64bit_addressing:     (value & (1 <<  7)) != 0,
+            supervisor_mode_64bit_addressing: (value & (1 <<  6)) != 0,
+            user_mode_64bit_addressing:       (value & (1 <<  5)) != 0,
 
-        self.mode = data.into();
+            mode: value.into(),
 
-        self.error_level =                      (data & (1 <<  2)) != 0;
-        self.exception_level =                  (data & (1 <<  1)) != 0;
-        self.interrupts_enabled =               (data & (1 <<  0)) != 0;
+            error_level:                      (value & (1 <<  2)) != 0,
+            exception_level:                  (value & (1 <<  1)) != 0,
+            interrupts_enabled:               (value & (1 <<  0)) != 0
+        }
     }
 }
 

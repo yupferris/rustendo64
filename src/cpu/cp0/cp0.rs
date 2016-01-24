@@ -1,10 +1,10 @@
-use super::reg_config;
 use super::reg_status;
+use super::reg_config;
 
 #[derive(Debug, Default)]
 pub struct Cp0 {
-    reg_config: reg_config::RegConfig,
-    reg_status: reg_status::RegStatus
+    reg_status: reg_status::RegStatus,
+    reg_config: reg_config::RegConfig
 }
 
 impl Cp0 {
@@ -14,12 +14,9 @@ impl Cp0 {
 
     pub fn write_reg(&mut self, index: u32, data: u64) {
         match index {
-            12 => { self.write_status_reg(data); }
-            _ => panic!("Unrecognized Cp0 reg: {:#?}, {:#?}", index, data)
+            12 => { self.reg_status = (data as u32).into() },
+            16 => { self.reg_config = (data as u32).into(); },
+            _ => panic!("Unrecognized Cp0 reg: {}, {:#x}", index, data)
         }
-    }
-
-    fn write_status_reg(&mut self, data: u64) {
-        self.reg_status.write(data as u32);
     }
 }
