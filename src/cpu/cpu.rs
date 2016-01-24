@@ -90,7 +90,7 @@ impl Cpu {
 
                 let sign_extended_offset = (offset as i16) as u64;
                 let virt_addr =
-                    sign_extended_offset + self.read_reg_gpr(base as usize);
+                    self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
                 self.write_reg_gpr(rt as usize, mem);
             }
