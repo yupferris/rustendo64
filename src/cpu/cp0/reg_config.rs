@@ -38,15 +38,15 @@ enum DataTransferPattern {
 
 impl Default for DataTransferPattern {
     fn default() -> Self {
-        DataTransferPattern::Normal
+        Self::Normal
     }
 }
 
 impl From<u32> for DataTransferPattern {
     fn from(value: u32) -> Self {
         match (value >> 24) & 0b1111 {
-            0 => DataTransferPattern::Normal,
-            6 => DataTransferPattern::DxxDxx,
+            0 => Self::Normal,
+            6 => Self::DxxDxx,
             _ => panic!("Invalid data transfer pattern (EP): {:#x}", value)
         }
     }
@@ -60,15 +60,15 @@ enum Endianness {
 
 impl Default for Endianness {
     fn default() -> Self {
-        Endianness::Big
+        Self::Big
     }
 }
 
 impl From<u32> for Endianness {
     fn from(value: u32) -> Self {
         match (value >> 15) & 0b1 {
-            0 => Endianness::Little,
-            1 => Endianness::Big,
+            0 => Self::Little,
+            1 => Self::Big,
             _ => unreachable!()
         }
     }

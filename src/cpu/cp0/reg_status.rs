@@ -111,15 +111,15 @@ enum TLBGeneralExceptionVectorLocation {
 
 impl Default for TLBGeneralExceptionVectorLocation {
     fn default() -> Self {
-        TLBGeneralExceptionVectorLocation::Normal
+        Self::Normal
     }
 }
 
 impl From<u32> for TLBGeneralExceptionVectorLocation {
     fn from(value: u32) -> Self {
         match (value >> 22) & 0b1 {
-            0 => TLBGeneralExceptionVectorLocation::Normal,
-            1 => TLBGeneralExceptionVectorLocation::Bootstrap,
+            0 => Self::Normal,
+            1 => Self::Bootstrap,
             _ => unreachable!()
         }
     }
