@@ -62,12 +62,18 @@ impl Cpu {
         let instruction = self.read_word(self.reg_pc);
 
         let opcode = (instruction >> 26) & 0b111111;
+        let rs = (instruction >> 21) & 0b11111;
         let rt = (instruction >> 16) & 0b11111;
+        let imm = instruction & 0xffff;
 
         match opcode {
+            0b001101 => {
+                // Ori
+                let res = self.read_reg_gpr(rs as usize) | (imm as u64);
+                self.write_reg_gpr(rt as usize, res);
+            },
             0b001111 => {
                 // Lui
-                let imm = instruction & 0xffff;
                 // TODO: Sign extend for upper 32 bits
                 self.write_reg_gpr(rt as usize, (imm << 16) as u64);
             },
