@@ -1,5 +1,4 @@
-# rustendo64
-[![Build Status](https://travis-ci.org/yupferris/rustendo64.svg?branch=master)](https://travis-ci.org/yupferris/rustendo64)
+# rustendo64 [![Build Status](https://travis-ci.org/yupferris/rustendo64.svg?branch=master)](https://travis-ci.org/yupferris/rustendo64)
 
 Livecoding a Nintendo 64 emulator in Rust :D
 
