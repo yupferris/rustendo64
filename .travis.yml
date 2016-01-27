@@ -1,0 +1,5 @@
+sudo: false
+language: rust
+branches:
+  only:
+    - master
