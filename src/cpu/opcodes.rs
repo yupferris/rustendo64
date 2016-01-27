@@ -1,4 +1,4 @@
-// Instructions see VR4300 manuel Figure 16-1
+// Instructions see VR4300 manual Figure 16-1
 pub const SPECIAL: u32 = 0o00;
 pub const REGIMM: u32 = 0o01;
 pub const J: u32 = 0o02;
