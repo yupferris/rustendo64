@@ -1,0 +1,14 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+notifications:
+  email:
+    - jake@fusetools.com
+before_script:
+  - rustc --version
+  - cargo --version
+branches:
+  only:
+    - master
