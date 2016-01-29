@@ -66,8 +66,8 @@ impl fmt::Debug for Cpu {
             reg_hi: {:#018X}\n\
             reg_lo: {:#018X}\n\
             reg_llbit: {}\n\
-            reg_fcr0:  {:#018X}\n\
-            reg_fcr31: {:#018X}\n\
+            reg_fcr0:  {:#010X}\n\
+            reg_fcr31: {:#010X}\n\
             ", 
             self.reg_pc, 
             self.reg_hi, 
