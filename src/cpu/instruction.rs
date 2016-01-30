@@ -43,6 +43,7 @@ pub const SWR:     u32 = 0b101110;
 pub const LL:      u32 = 0b110000;
 pub const LLD:     u32 = 0b110100;
 pub const SC:      u32 = 0b111000;
+pub const SCD:     u32 = 0b111100;
 pub const CACHE:   u32 = 0b101111;
 pub const SPECIAL: u32 = 0b000000;
 pub const REGIMM:  u32 = 0b000001;
@@ -105,6 +106,7 @@ pub const TLTU:    u32 = 0b110011;
 pub const TNE:     u32 = 0b110110;
 pub const SYNC:    u32 = 0b001111;
 pub const SYSCALL: u32 = 0b001100;
+pub const BREAK:   u32 = 0b001101;
 
 // REG-IMM ops
 pub const BGEZ:    u32 = 0b00001;
@@ -244,8 +246,8 @@ impl Instruction {
 
     /// FP format -- present in most FP instrs.
     #[inline(always)]
-    pub fn fp_fmt(self) -> usize {
-        (self.0 as usize >> 21) & 0b11111
+    pub fn fp_fmt(self) -> u32 {
+        (self.0 as u32 >> 21) & 0b11111
     }
 
     // Accessors for the bits 16-20
@@ -348,8 +350,14 @@ impl Instruction {
 impl fmt::Debug for Instruction {
     /// Debug-output an instruction by disassembling it.
     ///
-    /// Note that we don't do extensive checks for unused bits being zero.
-    /// A full disassembler would flag these as invalid.
+    /// The output is made to resemble what `objdump -m mips` prints, with the
+    /// following caveats:
+    ///
+    /// * Branch targets are printed relative, since this routine doesn't
+    ///   know the instruction's actual address.
+    /// * We don't do checks for unused bits being zero, so some invalid
+    ///   instructions will not be flagged as invalid.
+    /// * Probably not all short forms are implemented.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         /// Expand an argument shorthand into its output form.
         macro_rules! aexp {
@@ -361,18 +369,12 @@ impl fmt::Debug for Instruction {
             (ims)   => { self.imm_signed() };
             (ioff)  => { (self.imm_signed() + 1) << 2 };
             (sa)    => { self.sa() };
-            (sa32)  => { 32 + self.sa() };
-            (targ)  => { self.j_target() << 2 };
-            (cop)   => { self.rt() };
-            (cpreg) => { self.cop_reg() };
-            (fpfmt) => { FP_FORMATS[self.fp_fmt()] };
+            (jadr)  => { format!("{:#x}", self.j_target() << 2) };
+            (cop)   => { format!("{:#x}", self.rt()) };
+            (cpreg) => { format!("${}", self.cop_reg()) };
             (ft)    => { FP_REG_NAMES[self.ft()] };
             (fd)    => { FP_REG_NAMES[self.fd()] };
             (fs)    => { FP_REG_NAMES[self.fs()] };
-        }
-        /// General instruction with custom format and any number of args given.
-        macro_rules! ins {
-            ($fmt:expr, $($a:tt),+) => { write!(f, $fmt, $(aexp!($a)),+) }
         }
         /// N-argument instruction with special formats.
         macro_rules! ins1 {
@@ -393,12 +395,14 @@ impl fmt::Debug for Instruction {
         /// FP instructions.
         macro_rules! fpins2 {
             ($name:expr, $a1:tt, $a2:tt) => {
-                write!(f, "{:7} {}, {}", format!("{}.{}", $name, self.fp_fmt()),
+                write!(f, "{:7} {}, {}", format!("{}.{}", $name,
+                                                 FP_FORMATS[self.fp_fmt() as usize]),
                        aexp!($a1), aexp!($a2)) }
         }
         macro_rules! fpins3 {
             ($name:expr, $a1:tt, $a2:tt, $a3:tt) => {
-                write!(f, "{:7} {}, {}, {}", format!("{}.{}", $name, self.fp_fmt()),
+                write!(f, "{:7} {}, {}, {}", format!("{}.{}", $name,
+                                                     FP_FORMATS[self.fp_fmt() as usize]),
                        aexp!($a1), aexp!($a2), aexp!($a3)) }
         }
         /// For unknown opcodes, write the full word in hex.
@@ -418,8 +422,8 @@ impl fmt::Debug for Instruction {
             XORI    => ins3!("xori",   rt, rs, imm),
             SLTI    => ins3!("slti",   rt, rs, imm),
             SLTIU   => ins3!("sltiu",  rt, rs, imm),
-            J       => ins! ("j       {:#x}", targ),
-            JAL     => ins! ("jal     {:#x}", targ),
+            J       => ins1!("j",      jadr),
+            JAL     => ins1!("jal",    jadr),
             BEQ     => if self.rt() == 0 { ins2!("beqz",  rs, ioff) } else { ins3!("beq",  rs, rt, ioff) },
             BEQL    => if self.rt() == 0 { ins2!("beqzl", rs, ioff) } else { ins3!("beql", rs, rt, ioff) },
             BNE     => if self.rt() == 0 { ins2!("bnez",  rs, ioff) } else { ins3!("bne",  rs, rt, ioff) },
@@ -449,6 +453,7 @@ impl fmt::Debug for Instruction {
             LL      => insm!("ll",     rt, ims, base),
             LLD     => insm!("lld",    rt, ims, base),
             SC      => insm!("sc",     rt, ims, base),
+            SCD     => insm!("scd",    rt, ims, base),
             CACHE   => insm!("cache",  cop, ims, base),
             SPECIAL => match self.special_op() {
                 JR      => ins1!("jr", rs),
@@ -477,15 +482,15 @@ impl fmt::Debug for Instruction {
                 DSRAV   => ins3!("dsrav",  rd, rt, rs),
                 DSRLV   => ins3!("dsrlv",  rd, rt, rs),
                 DSLL    => ins3!("dsll",   rd, rt, sa),
-                DSLL32  => ins3!("dsll",   rd, rt, sa32),
+                DSLL32  => ins3!("dsll32", rd, rt, sa),
                 DSRA    => ins3!("dsra",   rd, rt, sa),
-                DSRA32  => ins3!("dsra",   rd, rt, sa32),
+                DSRA32  => ins3!("dsra32", rd, rt, sa),
                 DSRL    => ins3!("dsrl",   rd, rt, sa),
-                DSRL32  => ins3!("dsrl",   rd, rt, sa32),
+                DSRL32  => ins3!("dsrl32", rd, rt, sa),
                 MFHI    => ins1!("mfhi",   rd),
                 MFLO    => ins1!("mflo",   rd),
-                MTHI    => ins1!("mthi",   rd),
-                MTLO    => ins1!("mthi",   rd),
+                MTHI    => ins1!("mthi",   rs),
+                MTLO    => ins1!("mtlo",   rs),
                 MULT    => ins2!("mult",   rs, rt),
                 MULTU   => ins2!("multu",  rs, rt),
                 DIV     => ins2!("div",    rs, rt),
@@ -502,6 +507,7 @@ impl fmt::Debug for Instruction {
                 TNE     => ins2!("tne",    rs, rt),
                 SYNC    => write!(f, "sync"),
                 SYSCALL => write!(f, "syscall {:#x}", self.0 >> 6),
+                BREAK   => write!(f, "break   {:#x}", self.0 >> 6),
                 _       => unknown!(),
             },
             REGIMM  => match self.regimm_op() {
@@ -522,10 +528,10 @@ impl fmt::Debug for Instruction {
                 _       => unknown!(),
             },
             COP0    => match self.cop_op() {
-                MF      => ins!("mfc0    {}, ${}", rt, cpreg),
-                MT      => ins!("mtc0    {}, ${}", rt, cpreg),
-                DMF     => ins!("dmfc0   {}, ${}", rt, cpreg),
-                DMT     => ins!("dmtc0   {}, ${}", rt, cpreg),
+                MF      => ins2!("mfc0",  rt, cpreg),
+                MT      => ins2!("mtc0",  rt, cpreg),
+                DMF     => ins2!("dmfc0", rt, cpreg),
+                DMT     => ins2!("dmtc0", rt, cpreg),
                 BC      => match self.regimm_op() {
                     BCF     => ins1!("bc0f",  ioff),
                     BCFL    => ins1!("bc0fl", ioff),
@@ -548,8 +554,8 @@ impl fmt::Debug for Instruction {
                 MT      => ins2!("mtc1",  rt, fs),
                 DMF     => ins2!("dmfc1", rt, fs),
                 DMT     => ins2!("dmtc1", rt, fs),
-                CF      => ins2!("cfc1",  rt, fs),
-                CT      => ins2!("ctc1",  rt, fs),
+                CF      => ins2!("cfc1",  rt, cpreg),
+                CT      => ins2!("ctc1",  rt, cpreg),
                 BC      => match self.regimm_op() {
                     BCF     => ins1!("bc1f",  ioff),
                     BCFL    => ins1!("bc1fl", ioff),
@@ -568,9 +574,9 @@ impl fmt::Debug for Instruction {
                     FCVTW   => fpins2!("cvt.w",   fd, fs),
                     FDIV    => fpins3!("div",     fd, fs, ft),
                     FFLOORL => fpins2!("floor.l", fd, fs),
-                    FFLOORW => fpins2!("florr.w", fd, fs),
+                    FFLOORW => fpins2!("floor.w", fd, fs),
                     FMOV    => fpins2!("mov",     fd, fs),
-                    FMUL    => fpins2!("mul",     fd, fs),
+                    FMUL    => fpins3!("mul",     fd, fs, ft),
                     FNEG    => fpins2!("neg",     fd, fs),
                     FROUNDL => fpins2!("round.l", fd, fs),
                     FROUNDW => fpins2!("round.w", fd, fs),
@@ -603,5 +609,81 @@ impl fmt::Debug for Instruction {
             SWC1    => insm!("swc1", ft, ims, base),
             _       => unknown!(),
         }
+    }
+}
+
+
+#[test]
+fn test_instr_decoding() {
+    let word = Instruction(0x03224021);  // addu   t0, t9, v0
+    assert_eq!(word.opcode(), SPECIAL);
+    assert_eq!(word.special_op(), ADDU);
+    assert_eq!(word.rd(), 8);   // t0
+    assert_eq!(word.rs(), 25);  // t9
+    assert_eq!(word.rt(), 2);   // v0
+    let word = Instruction(0x8ccffffc);  // lw     t7, -4(a2)
+    assert_eq!(word.opcode(), LW);
+    assert_eq!(word.base(), 6); // a2
+    assert_eq!(word.imm(), 0xfffc);
+    assert_eq!(word.imm_sign_extended(), 0xffff_ffff_ffff_fffc);
+    assert_eq!(word.imm_signed(), -0x4);
+    let word = Instruction(0x00032a03);  // sra    a1, v1, 8
+    assert_eq!(word.opcode(), SPECIAL);
+    assert_eq!(word.special_op(), SRA);
+    assert_eq!(word.sa(), 8);
+    let word = Instruction(0x06310004);  // bgezal s1, 20
+    assert_eq!(word.opcode(), REGIMM);
+    assert_eq!(word.regimm_op(), BGEZAL);
+    let word = Instruction(0x408a7000);  // mtc0   t2, $14
+    assert_eq!(word.opcode(), COP0);
+    assert_eq!(word.cop_op(), MT);
+    assert_eq!(word.cop_reg(), 14);
+    let word = Instruction(0x460a4200);  // add.s  $f8, $f8, $f10
+    assert_eq!(word.opcode(), COP1);
+    assert_eq!(word.fp_op(), FADD);
+    assert_eq!(word.fp_fmt(), FMT_S);
+    assert_eq!(word.fd(), 8);
+    assert_eq!(word.fs(), 8);
+    assert_eq!(word.ft(), 10);
+    let word = Instruction(0x08000010);  // j      0x40
+    assert_eq!(word.opcode(), J);
+    assert_eq!(word.j_target(), 0x10);
+}
+
+#[test]
+fn test_disassembly() {
+    // Testing one of each type of instruction.
+    for &(word, repr) in &[(0x3c093456, "lui     t1, 0x3456"),
+                           (0x8fbf001e, "lw      ra, 30(sp)"),
+                           (0x27bdffd0, "addiu   sp, sp, -48"),
+                           (0x08000010, "j       0x40"),
+                           (0x5512fffd, "bnel    t0, s2, -8"),
+                           (0x5500fffd, "bnezl   t0, -8"),
+                           (0x1de00010, "bgtz    t7, 68"),
+                           (0xbd190000, "cache   0x19, 0(t0)"),
+                           (0x03e00008, "jr      ra"),
+                           (0x0320f809, "jalr    t9"),
+                           (0x0320e809, "jalr    sp, t9"),
+                           (0x01485021, "addu    t2, t2, t0"),
+                           (0x00408025, "move    s0, v0"),
+                           (0x00000000, "nop"),
+                           (0x00032a03, "sra     a1, v1, 8"),
+                           (0x0003183f, "dsra32  v1, v1, 0"),
+                           (0x00001010, "mfhi    v0"),
+                           (0x01cf001d, "dmultu  t6, t7"),
+                           (0x0000000f, "sync"),
+                           (0x0000000c, "syscall 0x0"),
+                           (0x0000010d, "break   0x4"),
+                           (0x07010003, "bgez    t8, 16"),
+                           (0x04110003, "bal     16"),
+                           (0x408a7000, "mtc0    t2, $14"),
+                           (0x42000018, "eret"),
+                           (0x44029000, "mfc1    v0, $f18"),
+                           (0x444af800, "cfc1    t2, $31"),
+                           (0x46205a45, "abs.d   $f9, $f11"),
+                           (0x460a4200, "add.s   $f8, $f8, $f10"),
+                           (0xd7280030, "ldc1    $f8, 48(t9)")]
+    {
+        assert_eq!(repr, &format!("{:?}", Instruction(word)));
     }
 }
