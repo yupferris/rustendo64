@@ -10,7 +10,7 @@ The entire process is currently being streamed on [Twitch](http://www.twitch.tv/
 ## Helpful tools
 - [Hex Fiend](http://ridiculousfish.com/hexfiend/)
 - [Online disassembler](https://www.onlinedisassembler.com/odaweb/)
-- [Dash](https://kapeli.com/dash)
+- [Dash](https://kapeli.com/dash) (OS X / iOS) & [Zeal](https://zealdocs.org/) (Linux / Windows)
 
 ## Literature
 - [VR4300 datasheet](http://datasheets.chipdb.org/NEC/Vr-Series/Vr43xx/U10504EJ7V0UMJ1.pdf)
