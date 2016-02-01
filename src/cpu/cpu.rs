@@ -3,7 +3,7 @@ use super::cp0::cp0;
 
 const NUM_GPR: usize = 32;
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Cpu {
     reg_gpr: [u64; NUM_GPR],
     reg_fpr: [f64; NUM_GPR],
@@ -25,24 +25,12 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
-        Cpu {
-            reg_gpr: [0; NUM_GPR],
-            reg_fpr: [0.0; NUM_GPR],
-
-            reg_pc: 0,
-
-            reg_hi: 0,
-            reg_lo: 0,
-
-            reg_llbit: false,
-
-            reg_fcr0: 0,
-            reg_fcr31: 0,
-
-            cp0: cp0::Cp0::default(),
-
-            interconnect: interconnect
-        }
+        let cpu = {
+            let mut cpu = Cpu::default();
+            cpu.interconnect = interconnect;
+            cpu
+        };
+        cpu
     }
 
     pub fn power_on_reset(&mut self) {
