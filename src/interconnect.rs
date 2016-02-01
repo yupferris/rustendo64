@@ -6,6 +6,7 @@ const PIF_ROM_SIZE: usize = 2048;
 
 const RAM_SIZE: usize = 4 * 1024 * 1024;
 
+#[derive(Default)]
 pub struct Interconnect {
     pif_rom: Vec<u8>,
 
