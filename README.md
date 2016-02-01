@@ -34,6 +34,8 @@ at your option.
 
 ### Contribution
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
-additional terms or conditions.
+I do accept (and appreciate!) pull requests, but please, try to keep them to _small, meaningful, isolated_ changes only that I can go over completely on the stream. Significant outside contributions, as cool as they may be, somewhat defeat the most important part of this project - **documenting everything through livecoding**. I'm happy to accept small cosmetic changes/bugfixes, but please, consider what the larger audience as a whole might be missing out on when they don't get to see the thought process and resources that went into making the contribution (which is unfortunately what happens whenever I accept a PR).
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+Issues, especially pertaining to accuracy/bugfixes, are always more than welcome!
