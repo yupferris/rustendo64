@@ -1,4 +1,5 @@
-use super::byteorder::{BigEndian, ByteOrder};
+use byteorder::{BigEndian, ByteOrder};
+use memmap::*;
 
 use std::fmt;
 
@@ -22,13 +23,15 @@ impl Interconnect {
     }
 
     pub fn read_word(&self, addr: u32) -> u32 {
-        // TODO: Replace constants with useful names
-        if addr >= 0x1fc0_0000 && addr < 0x1fc0_07c0 {
-            let rel_addr = addr - 0x1fc0_0000;
-            BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
-        } else {
-            // TODO
-            panic!("Unrecognized physical address: {:#x}", addr);
+        match addr {
+            PIF_ROM_START ... PIF_ROM_END => {
+                let rel_addr = addr - PIF_ROM_START;
+                BigEndian::read_u32(&self.pif_rom[rel_addr as usize..])
+            },
+            _ => {
+                // TODO
+                panic!("Unrecognized physical address: {:#x}", addr);
+            }
         }
     }
 }
