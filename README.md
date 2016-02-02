@@ -40,6 +40,4 @@ I do accept (and appreciate!) pull requests, but please, try to keep them to _sm
 
 If you'd like to see a particular library or coding style used somewhere, opening an issue is much preferred over a PR, so we can discuss it beforehand and implement it live. This also keeps people from stepping on each others' toes and implementing the same things (yes, this has happened already).
 
-Remember, the primary goal here is to document everything while building something significantly challenging, not necessarily making the ultimate community-driven Rust emulator project. I'm thrilled people are excited and want to get involved - we just need to make an effort to ensure this goal is preserved.
-
 Issues, especially pertaining to accuracy/bugfixes, are always more than welcome!
