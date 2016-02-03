@@ -23,6 +23,7 @@ The entire process is currently being streamed on [Twitch](http://www.twitch.tv/
 * [Zophar](http://www.zophar.net/pdroms/n64.html)
 * [PDROMs](http://pdroms.de/news/nintendo64/)
 * [Micro-64](http://micro-64.com/features/aafeatures.shtml)
+* [PeterLemon's ROMs](https://github.com/PeterLemon/N64)
 
 ## License
 
