@@ -1,7 +1,5 @@
 #[derive(Default)]
-pub struct Rsp {
-    _dummy: i32
-}
+pub struct Rsp;
 
 impl Rsp {
     // TODO: Read general regs
