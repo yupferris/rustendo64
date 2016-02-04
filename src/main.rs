@@ -1,5 +1,10 @@
 extern crate byteorder;
 
+extern crate num;
+
+#[macro_use]
+extern crate enum_primitive;
+
 mod n64;
 mod cpu;
 mod rsp;
