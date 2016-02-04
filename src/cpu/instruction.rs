@@ -1,3 +1,5 @@
+use std::fmt;
+
 use super::opcode::Opcode;
 
 use num::FromPrimitive;
@@ -7,7 +9,7 @@ pub struct Instruction(pub u32);
 impl Instruction {
     #[inline(always)]
     pub fn opcode(&self) -> Opcode {
-        Opcode::from_u32((self.0 >> 26) & 0b111111).unwrap_or_else(
+        Opcode::from_u32((self.0  >> 26) & 0b111111).unwrap_or_else(
             || panic!("Unrecognized instruction: {:#x}", self.0))
     }
 
@@ -34,5 +36,11 @@ impl Instruction {
     #[inline(always)]
     pub fn offset(&self) -> u32 {
         self.imm()
+    }
+}
+
+impl fmt::Debug for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.opcode())
     }
 }
