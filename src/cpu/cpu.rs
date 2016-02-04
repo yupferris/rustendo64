@@ -33,34 +33,34 @@ impl fmt::Debug for Cpu {
         "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
         "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra",
         ];
-        
+
         try!(write!(f,"\nCPU General Purpose Registers:"));
         for reg_num in 0..NUM_GPR {
             if (reg_num % REGS_PER_LINE) == 0 {
                 try!(writeln!(f,""));
             }
-            try!(write!(f, 
+            try!(write!(f,
                 "{reg_name}/gpr{num:02}: {value:#018X} ",
                 num = reg_num,
                 reg_name = REG_NAMES[reg_num],
                 value = self.reg_gpr[reg_num],
             ));
         }
-        
-        try!(write!(f,"\n\nCPU Floating Point Registers:"));    
+
+        try!(write!(f,"\n\nCPU Floating Point Registers:"));
         for reg_num in 0..NUM_GPR {
             if (reg_num % REGS_PER_LINE) == 0 {
                 try!(writeln!(f,""));
             }
-            try!(write!(f, 
+            try!(write!(f,
                 "fpr{num:02}: {value:21} ",
                 num = reg_num,
                 value = self.reg_fpr[reg_num],)
             );
         }
-        
+
         try!(writeln!(f,"\n\nCPU Special Registers:"));
-        try!(writeln!(f, 
+        try!(writeln!(f,
             "\
             reg_pc: {:#018X}\n\
             reg_hi: {:#018X}\n\
@@ -68,10 +68,10 @@ impl fmt::Debug for Cpu {
             reg_llbit: {}\n\
             reg_fcr0:  {:#010X}\n\
             reg_fcr31: {:#010X}\n\
-            ", 
-            self.reg_pc, 
-            self.reg_hi, 
-            self.reg_lo, 
+            ",
+            self.reg_pc,
+            self.reg_hi,
+            self.reg_lo,
             self.reg_llbit,
             self.reg_fcr0,
             self.reg_fcr31
@@ -126,6 +126,11 @@ impl Cpu {
         let imm = instruction & 0xffff;
 
         match opcode {
+            0b001100 => {
+                // andi
+                let res = self.read_reg_gpr(rs as usize) & (imm as u64);
+                self.write_reg_gpr(rt as usize, res);
+            },
             0b001101 => {
                 // ori
                 let res = self.read_reg_gpr(rs as usize) | (imm as u64);
