@@ -76,43 +76,58 @@ impl Cpu {
 
     fn execute_instruction(&mut self, instr: Instruction) {
         match instr.opcode() {
+            Addi => {
+                // TODO: Handle exception overflow
+                let res =
+                    self.read_reg_gpr(instr.rs()) + instr.imm_sign_extended();
+                self.write_reg_gpr(instr.rt(), res);
+            },
+            Addiu => {
+                let res = self.read_reg_gpr(instr.rs()).wrapping_add(
+                    instr.imm_sign_extended());
+                self.write_reg_gpr(instr.rt(), res);
+            },
             Andi => {
-                let res = self.read_reg_gpr(instr.rs() as usize) & (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt() as usize, res);
+                let res = self.read_reg_gpr(instr.rs()) &
+                    (instr.imm() as u64);
+                self.write_reg_gpr(instr.rt(), res);
             },
             Ori => {
-                let res = self.read_reg_gpr(instr.rs() as usize) | (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt() as usize, res);
+                let res = self.read_reg_gpr(instr.rs()) |
+                    (instr.imm() as u64);
+                self.write_reg_gpr(instr.rt(), res);
             },
             Lui => {
                 let value = ((instr.imm() << 16) as i32) as u64;
-                self.write_reg_gpr(instr.rt() as usize, value);
+                self.write_reg_gpr(instr.rt(), value);
             },
             Mtc0 => {
-                let data = self.read_reg_gpr(instr.rt() as usize);
+                let data = self.read_reg_gpr(instr.rt());
                 self.cp0.write_reg(instr.rd(), data);
             },
             Beql => {
-                if self.read_reg_gpr(instr.rs() as usize) == self.read_reg_gpr(instr.rt() as usize) {
+                if self.read_reg_gpr(instr.rs()) == self.read_reg_gpr(instr.rt()) {
                     let old_pc = self.reg_pc;
 
                     let sign_extended_offset =
-                        ((instr.offset() as i16) as u64).wrapping_shl(2);
+                        instr.offset_sign_extended().wrapping_shl(2);
                     self.reg_pc =
                         self.reg_pc.wrapping_add(sign_extended_offset);
 
                     let delay_slot_instr = self.read_instruction(old_pc);
                     self.execute_instruction(delay_slot_instr);
+                } else {
+                    self.reg_pc = self.reg_pc.wrapping_add(4);
                 }
             },
             Lw => {
                 let base = instr.rs();
 
-                let sign_extended_offset = (instr.offset() as i16) as u64;
+                let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr =
                     self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
-                self.write_reg_gpr(instr.rt() as usize, mem);
+                self.write_reg_gpr(instr.rt(), mem);
             }
         }
     }

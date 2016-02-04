@@ -1,15 +1,18 @@
 enum_from_primitive! {
     #[derive(Debug)]
     pub enum Opcode {
-        Andi = 0b001100,
-        Ori =  0b001101,
+        Addi =  0b001000,
+        Addiu = 0b001001,
 
-        Lui =  0b001111,
+        Andi =  0b001100,
+        Ori =   0b001101,
 
-        Mtc0 = 0b010000,
+        Lui =   0b001111,
 
-        Beql = 0b010100,
+        Mtc0 =  0b010000,
 
-        Lw =   0b100011
+        Beql =  0b010100,
+
+        Lw =    0b100011
     }
 }
