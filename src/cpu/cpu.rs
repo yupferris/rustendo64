@@ -83,8 +83,8 @@ impl Cpu {
                 self.write_reg_gpr(instr.rt(), res);
             },
             Addiu => {
-                let res = self.read_reg_gpr(instr.rs()).wrapping_add(
-                    instr.imm_sign_extended());
+                let res = self.read_reg_gpr(instr.rs())
+                    .wrapping_add(instr.imm_sign_extended());
                 self.write_reg_gpr(instr.rt(), res);
             },
             Andi => {
