@@ -13,6 +13,7 @@ The entire process is currently being streamed on [Twitch](http://www.twitch.tv/
 - [Dash](https://kapeli.com/dash) (OS X / iOS) for documentation. Compatible alternatives for other platforms can be found linked from [Dash Docset Links](https://kapeli.com/docset_links).
 
 ## Literature
+- [n64dev repo doc's](https://github.com/mikeryan/n64dev/tree/master/docs)
 - [VR4300 datasheet](http://datasheets.chipdb.org/NEC/Vr-Series/Vr43xx/U10504EJ7V0UMJ1.pdf)
 - [Forum post where we found some boot info](http://www.emutalk.net/threads/53938-N64-tech-documentation)
 - [Detailed N64 memory map](http://infrid.com/rcp64/docfiles/n64maps.txt)
