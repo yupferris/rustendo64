@@ -7,6 +7,7 @@ use std::fmt;
 
 const NUM_GPR: usize = 32;
 
+#[derive(Default)]
 pub struct Cpu {
     reg_gpr: [u64; NUM_GPR],
     reg_fpr: [f64; NUM_GPR],
@@ -23,29 +24,12 @@ pub struct Cpu {
 
     cp0: cp0::Cp0,
 
-    interconnect: interconnect::Interconnect
+    interconnect: interconnect::Interconnect,
 }
 
 impl Cpu {
     pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
-        Cpu {
-            reg_gpr: [0; NUM_GPR],
-            reg_fpr: [0.0; NUM_GPR],
-
-            reg_pc: 0,
-
-            reg_hi: 0,
-            reg_lo: 0,
-
-            reg_llbit: false,
-
-            reg_fcr0: 0,
-            reg_fcr31: 0,
-
-            cp0: cp0::Cp0::default(),
-
-            interconnect: interconnect
-        }
+        Cpu { interconnect: interconnect, ..Default::default() }
     }
 
     pub fn power_on_reset(&mut self) {
