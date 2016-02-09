@@ -44,3 +44,10 @@ impl fmt::Debug for Interconnect {
         write!(f, "TODO: Impl Debug for Interconnect")
     }
 }
+
+impl Default for Interconnect {
+    fn default() -> Interconnect {
+        // dummy impl to satisfy compiler
+        Interconnect::new(Vec::new())
+    }
+}
