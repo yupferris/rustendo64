@@ -110,7 +110,7 @@ impl Cpu {
                     let old_pc = self.reg_pc;
 
                     let sign_extended_offset =
-                        instr.offset_sign_extended().wrapping_shl(2);
+                        instr.offset_sign_extended() << 2;
                     self.reg_pc =
                         self.reg_pc.wrapping_add(sign_extended_offset);
 
