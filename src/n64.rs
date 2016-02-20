@@ -7,7 +7,7 @@ pub struct N64 {
 }
 
 impl N64 {
-    pub fn new(pif_rom: Vec<u8>) -> N64 {
+    pub fn new(pif_rom: Box<[u8]>) -> N64 {
         let interconnect = interconnect::Interconnect::new(pif_rom);
         let cpu = cpu::Cpu::new(interconnect);
 
