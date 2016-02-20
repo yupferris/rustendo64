@@ -10,13 +10,6 @@ pub struct RegConfig {
     kseg0_cache_enabled: bool
 }
 
-impl RegConfig {
-    pub fn power_on_reset(&mut self) {
-        self.data_transfer_pattern = DataTransferPattern::Normal;
-        self.endianness = Endianness::Big;
-    }
-}
-
 impl From<u32> for RegConfig {
     fn from(value: u32) -> Self {
         RegConfig {
