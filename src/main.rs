@@ -8,6 +8,9 @@ extern crate enum_primitive;
 mod n64;
 mod cpu;
 mod rsp;
+mod audio_interface;
+mod video_interface;
+mod peripheral_interface;
 mod interconnect;
 mod mem_map;
 

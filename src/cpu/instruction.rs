@@ -4,6 +4,7 @@ use super::opcode::Opcode;
 
 use num::FromPrimitive;
 
+#[derive(Clone, Copy)]
 pub struct Instruction(pub u32);
 
 impl Instruction {

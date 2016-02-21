@@ -99,21 +99,12 @@ impl Cpu {
                 let data = self.read_reg_gpr(instr.rt());
                 self.cp0.write_reg(instr.rd(), data);
             },
-            Beql => {
-                if self.read_reg_gpr(instr.rs()) == self.read_reg_gpr(instr.rt()) {
-                    let old_pc = self.reg_pc;
 
-                    let sign_extended_offset =
-                        instr.offset_sign_extended() << 2;
-                    self.reg_pc =
-                        self.reg_pc.wrapping_add(sign_extended_offset);
+            Bne => { self.branch(instr, |rs, rt| rs != rt); },
 
-                    let delay_slot_instr = self.read_instruction(old_pc);
-                    self.execute_instruction(delay_slot_instr);
-                } else {
-                    self.reg_pc = self.reg_pc.wrapping_add(4);
-                }
-            },
+            Beql => self.branch_likely(instr, |rs, rt| rs == rt),
+            Bnel => self.branch_likely(instr, |rs, rt| rs != rt),
+
             Lw => {
                 let base = instr.rs();
 
@@ -122,14 +113,55 @@ impl Cpu {
                     self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), mem);
+            },
+            Sw => {
+                let base = instr.rs();
+
+                let sign_extended_offset = instr.offset_sign_extended();
+                let virt_addr =
+                    self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
+                let mem = self.read_reg_gpr(instr.rt()) as u32;
+                self.write_word(virt_addr, mem);
             }
+        }
+    }
+
+    fn branch<F>(&mut self, instr: Instruction, f: F) -> bool where F: FnOnce(u64, u64) -> bool {
+        let rs = self.read_reg_gpr(instr.rs());
+        let rt = self.read_reg_gpr(instr.rt());
+        let is_taken = f(rs, rt);
+
+        if is_taken {
+            let old_pc = self.reg_pc;
+
+            let sign_extended_offset =
+                instr.offset_sign_extended() << 2;
+            // Update PC before executing delay slot instruction
+            self.reg_pc =
+                self.reg_pc.wrapping_add(sign_extended_offset);
+
+            let delay_slot_instr = self.read_instruction(old_pc);
+            self.execute_instruction(delay_slot_instr);
+        }
+
+        is_taken
+    }
+
+    fn branch_likely<F>(&mut self, instr: Instruction, f: F) where F: FnOnce(u64, u64) -> bool {
+        if !self.branch(instr, f) {
+            // Skip over delay slot instruction when not branching
+            self.reg_pc = self.reg_pc.wrapping_add(4);
         }
     }
 
     fn read_word(&self, virt_addr: u64) -> u32 {
         let phys_addr = self.virt_addr_to_phys_addr(virt_addr);
-        // TODO: Check endianness
         self.interconnect.read_word(phys_addr as u32)
+    }
+
+    fn write_word(&mut self, virt_addr: u64, value: u32) {
+        let phys_addr = self.virt_addr_to_phys_addr(virt_addr);
+        self.interconnect.write_word(phys_addr as u32, value);
     }
 
     fn virt_addr_to_phys_addr(&self, virt_addr: u64) -> u64 {
