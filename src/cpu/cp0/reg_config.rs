@@ -7,7 +7,7 @@ pub struct RegConfig {
     endianness: Endianness,
 
     cu: bool,
-    kseg0_cache_bits: [bool;3],
+    kseg0_cache_enable_bits: [bool;3],
     kseg0_cache_enabled: bool
 }
 
@@ -19,7 +19,7 @@ impl From<u32> for RegConfig {
             endianness: value.into(),
 
             cu: (value & (1 << 3)) != 0,
-            kseg0_cache_bits: [
+            kseg0_cache_enable_bits: [
                 (value & (1 << 0)) != 0,
                 (value & (1 << 1)) != 0,
                 (value & (1 << 2)) != 0,
