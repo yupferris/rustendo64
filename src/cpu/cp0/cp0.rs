@@ -12,7 +12,7 @@ impl Cp0 {
         match index {
             12 => { self.reg_status = (data as u32).into() },
             16 => { self.reg_config = (data as u32).into(); },
-            _ => panic!("Unrecognized Cp0 reg: {}, {:#x}", index, data)
+            _ => panic!("Unrecognized Cp0 reg: {}, {:#018x}", index, data)
         }
     }
 }
