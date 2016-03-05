@@ -10,8 +10,9 @@ pub struct Instruction(pub u32);
 impl Instruction {
     #[inline(always)]
     pub fn opcode(&self) -> Opcode {
-        Opcode::from_u32((self.0  >> 26) & 0b111111).unwrap_or_else(
-            || panic!("Unrecognized instruction: {:#x}", self.0))
+        let value = (self.0  >> 26) & 0b111111;
+        Opcode::from_u32(value).unwrap_or_else(
+            || panic!("Unrecognized instruction: {:#010x} (op: {:#08b})", self.0, value))
     }
 
     #[inline(always)]
