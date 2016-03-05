@@ -7,8 +7,15 @@ pub struct RegConfig {
     endianness: Endianness,
 
     cu: bool,
-    kseg0_cache_enable_bits: [bool; 3],
-    kseg0_cache_enabled: bool
+    kseg0_cache_enable_bits: [bool; 3]
+}
+
+impl RegConfig {
+    fn kseg0_cache_enabled(&self) -> bool {
+        !(!self.kseg0_cache_enable_bits[0] &&
+          self.kseg0_cache_enable_bits[1] &&
+          !self.kseg0_cache_enable_bits[2])
+    }
 }
 
 impl From<u32> for RegConfig {
@@ -23,9 +30,7 @@ impl From<u32> for RegConfig {
                 (value & (1 << 0)) != 0,
                 (value & (1 << 1)) != 0,
                 (value & (1 << 2)) != 0,
-            ],
-            // TODO: Extract to method?
-            kseg0_cache_enabled: value & 0b111 != 0b010
+            ]
         }
     }
 }
