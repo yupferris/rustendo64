@@ -7,10 +7,12 @@ extern crate enum_primitive;
 
 mod n64;
 mod cpu;
+mod pif;
 mod rsp;
 mod audio_interface;
 mod video_interface;
 mod peripheral_interface;
+mod serial_interface;
 mod interconnect;
 mod mem_map;
 
@@ -26,7 +28,7 @@ fn main() {
     let pif = read_bin(pif_file_name);
     let rom = read_bin(rom_file_name);
 
-    let mut n64 = n64::N64::new(pif);
+    let mut n64 = n64::N64::new(pif, rom);
     loop {
         //println!("N64: {:#?}", &n64);
         n64.run_instruction();

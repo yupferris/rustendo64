@@ -7,8 +7,8 @@ pub struct N64 {
 }
 
 impl N64 {
-    pub fn new(pif_rom: Box<[u8]>) -> N64 {
-        let interconnect = interconnect::Interconnect::new(pif_rom);
+    pub fn new(boot_rom: Box<[u8]>, cart_rom: Box<[u8]>) -> N64 {
+        let interconnect = interconnect::Interconnect::new(boot_rom, cart_rom);
         let cpu = cpu::Cpu::new(interconnect);
 
         N64 {

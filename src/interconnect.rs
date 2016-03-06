@@ -1,15 +1,20 @@
+use byteorder::{BigEndian, ByteOrder};
+
+use super::pif::Pif;
 use super::rsp::Rsp;
 use super::audio_interface::AudioInterface;
 use super::video_interface::VideoInterface;
 use super::peripheral_interface::PeripheralInterface;
-use super::byteorder::{BigEndian, ByteOrder};
+use super::serial_interface::SerialInterface;
 use super::mem_map::*;
 
 use std::fmt;
 
-const RAM_SIZE: usize = 4 * 1024 * 1024;
+const RDRAM_SIZE: usize = 4 * 1024 * 1024;
 
 pub struct Interconnect {
+    pif: Pif,
+
     rsp: Rsp,
 
     ai: AudioInterface,
@@ -17,14 +22,18 @@ pub struct Interconnect {
 
     pi: PeripheralInterface,
 
-    pif_rom: Box<[u8]>,
+    si: SerialInterface,
 
-    ram: Box<[u16]>
+    cart_rom: Box<[u8]>,
+
+    rdram: Box<[u16]>
 }
 
 impl Interconnect {
-    pub fn new(pif_rom: Box<[u8]>) -> Interconnect {
+    pub fn new(boot_rom: Box<[u8]>, cart_rom: Box<[u8]>) -> Interconnect {
         Interconnect {
+            pif: Pif::new(boot_rom),
+
             rsp: Rsp::new(),
 
             ai: AudioInterface::default(),
@@ -32,16 +41,21 @@ impl Interconnect {
 
             pi: PeripheralInterface::default(),
 
-            pif_rom: pif_rom,
+            si: SerialInterface::default(),
 
-            ram: vec![0; RAM_SIZE].into_boxed_slice()
+            cart_rom: cart_rom,
+
+            rdram: vec![0; RDRAM_SIZE].into_boxed_slice()
         }
     }
 
     pub fn read_word(&self, addr: u32) -> u32 {
         match map_addr(addr) {
-            Addr::PifRom(offset) =>
-                BigEndian::read_u32(&self.pif_rom[offset as usize..]),
+            Addr::PifRom(offset) => self.pif.read_boot_rom(offset),
+            Addr::PifRam(offset) => self.pif.read_ram(offset),
+
+            Addr::CartDom1(offset) =>
+                BigEndian::read_u32(&self.cart_rom[offset as usize..]),
 
             Addr::SpImem(offset) => self.rsp.read_imem(offset),
 
@@ -56,12 +70,21 @@ impl Interconnect {
             Addr::ViHStartReg => self.vi.read_h_start_reg(),
 
             Addr::PiStatusReg => self.pi.read_status_reg(),
+            Addr::PiBsdDom1LatReg => self.pi.read_bsd_dom1_lat_reg(),
+            Addr::PiBsdDom1PwdReg => self.pi.read_bsd_dom1_pwd_reg(),
+            Addr::PiBsdDom1PgsReg => self.pi.read_bsd_dom1_pgs_reg(),
+            Addr::PiBsdDom1RlsReg => self.pi.read_bsd_dom1_rls_reg(),
+
+            Addr::SiStatusReg => self.si.read_status_reg()
         }
     }
 
     pub fn write_word(&mut self, addr: u32, value: u32) {
         match map_addr(addr) {
             Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
+            Addr::PifRam(offset) => self.pif.write_ram(offset, value),
+
+            Addr::CartDom1(offset) => panic!("Cannot write to cart ROM"),
 
             Addr::SpImem(offset) => self.rsp.write_imem(offset, value),
 
@@ -76,6 +99,12 @@ impl Interconnect {
             Addr::ViHStartReg => self.vi.write_h_start_reg(value),
 
             Addr::PiStatusReg => self.pi.write_status_reg(value),
+            Addr::PiBsdDom1LatReg => self.pi.write_bsd_dom1_lat_reg(value),
+            Addr::PiBsdDom1PwdReg => self.pi.write_bsd_dom1_pwd_reg(value),
+            Addr::PiBsdDom1PgsReg => self.pi.write_bsd_dom1_pgs_reg(value),
+            Addr::PiBsdDom1RlsReg => self.pi.write_bsd_dom1_rls_reg(value),
+
+            Addr::SiStatusReg => self.si.write_status_reg(value)
         }
     }
 }

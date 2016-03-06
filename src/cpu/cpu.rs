@@ -1,6 +1,7 @@
 use super::super::interconnect;
 use super::cp0;
 use super::opcode::Opcode::*;
+use super::opcode::SpecialOpcode::*;
 use super::instruction::Instruction;
 
 use std::fmt;
@@ -70,36 +71,61 @@ impl Cpu {
 
     fn execute_instruction(&mut self, instr: Instruction) {
         match instr.opcode() {
+            Special => {
+                match instr.special_op() {
+                    Srl => {
+                        let value = self.read_reg_gpr(instr.rt()) >> instr.sa();
+                        let sign_extended_value = (value as i32) as u64;
+                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
+                    }
+
+                    Jr => {
+                        let delay_slot_pc = self.reg_pc;
+
+                        // Update PC before executing delay slot instruction
+                        self.reg_pc = self.read_reg_gpr(instr.rs());
+
+                        let delay_slot_instr = self.read_instruction(delay_slot_pc);
+                        self.execute_instruction(delay_slot_instr);
+                    }
+
+                    Or => {
+                        let value = self.read_reg_gpr(instr.rs()) | self.read_reg_gpr(instr.rt());
+                        self.write_reg_gpr(instr.rd() as usize, value);
+                    }
+                }
+            }
             Addi => {
                 // TODO: Handle exception overflow
                 let res =
                     self.read_reg_gpr(instr.rs()) + instr.imm_sign_extended();
                 self.write_reg_gpr(instr.rt(), res);
-            },
+            }
             Addiu => {
                 let res = self.read_reg_gpr(instr.rs())
                     .wrapping_add(instr.imm_sign_extended());
                 self.write_reg_gpr(instr.rt(), res);
-            },
+            }
             Andi => {
                 let res = self.read_reg_gpr(instr.rs()) &
                     (instr.imm() as u64);
                 self.write_reg_gpr(instr.rt(), res);
-            },
+            }
             Ori => {
                 let res = self.read_reg_gpr(instr.rs()) |
                     (instr.imm() as u64);
                 self.write_reg_gpr(instr.rt(), res);
-            },
+            }
             Lui => {
                 let value = ((instr.imm() << 16) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), value);
-            },
+            }
             Mtc0 => {
                 let data = self.read_reg_gpr(instr.rt());
                 self.cp0.write_reg(instr.rd(), data);
-            },
+            }
 
+            Beq => { self.branch(instr, |rs, rt| rs == rt); },
             Bne => { self.branch(instr, |rs, rt| rs != rt); },
 
             Beql => self.branch_likely(instr, |rs, rt| rs == rt),
@@ -114,6 +140,7 @@ impl Cpu {
                 let mem = (self.read_word(virt_addr) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), mem);
             },
+
             Sw => {
                 let base = instr.rs();
 
@@ -132,7 +159,7 @@ impl Cpu {
         let is_taken = f(rs, rt);
 
         if is_taken {
-            let old_pc = self.reg_pc;
+            let delay_slot_pc = self.reg_pc;
 
             let sign_extended_offset =
                 instr.offset_sign_extended() << 2;
@@ -140,7 +167,7 @@ impl Cpu {
             self.reg_pc =
                 self.reg_pc.wrapping_add(sign_extended_offset);
 
-            let delay_slot_instr = self.read_instruction(old_pc);
+            let delay_slot_instr = self.read_instruction(delay_slot_pc);
             self.execute_instruction(delay_slot_instr);
         }
 
