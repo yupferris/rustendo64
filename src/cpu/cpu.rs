@@ -136,7 +136,7 @@ impl Cpu {
 
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr =
-                    self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
+                    self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), mem);
             },
@@ -146,7 +146,7 @@ impl Cpu {
 
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr =
-                    self.read_reg_gpr(base as usize).wrapping_add(sign_extended_offset);
+                    self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = self.read_reg_gpr(instr.rt()) as u32;
                 self.write_word(virt_addr, mem);
             }
