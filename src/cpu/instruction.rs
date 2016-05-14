@@ -65,6 +65,9 @@ impl Instruction {
 
 impl fmt::Debug for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.opcode())
+        match self.opcode() {
+            Opcode::Special => write!(f, "{:?}", self.special_op()),
+            _ => write!(f, "{:?}", self.opcode())
+        }
     }
 }
