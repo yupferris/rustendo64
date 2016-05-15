@@ -116,7 +116,7 @@ impl Cpu {
                         let rs = self.read_reg_gpr(instr.rs()) as u32;
                         let rt = self.read_reg_gpr(instr.rt()) as u32;
 
-                        let res = ((rs * rt) as i32) as u64;
+                        let res = (rs as u64) * (rt as u64);
 
                         // TODO: Undefined if last 2 instructions were
                         //  MFHI or MFLO
