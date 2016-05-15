@@ -61,6 +61,13 @@ impl Instruction {
         SpecialOpcode::from_u32(value).unwrap_or_else(
             || panic!("Unrecognized special opcode: {:#010x} (op: {:#08b})", self.0, value))
     }
+
+    #[inline(always)]
+    pub fn reg_imm_op(&self) -> RegImmOpcode {
+        let value = (self.0 >> 16) & 0b11111;
+        RegImmOpcode::from_u32(value).unwrap_or_else(
+            || panic!("Unrecognized reg imm opcode: {:#010x} (op: {:#08b})", self.0, value))
+    }
 }
 
 impl fmt::Debug for Instruction {

@@ -1,12 +1,13 @@
 use byteorder::{BigEndian, ByteOrder};
 
-use super::pif::Pif;
-use super::rsp::Rsp;
-use super::audio_interface::AudioInterface;
-use super::video_interface::VideoInterface;
-use super::peripheral_interface::PeripheralInterface;
-use super::serial_interface::SerialInterface;
-use super::mem_map::*;
+use pif::Pif;
+use rsp::Rsp;
+use rdp::Rdp;
+use audio_interface::AudioInterface;
+use video_interface::VideoInterface;
+use peripheral_interface::PeripheralInterface;
+use serial_interface::SerialInterface;
+use mem_map::*;
 
 use std::fmt;
 
@@ -16,6 +17,7 @@ pub struct Interconnect {
     pif: Pif,
 
     rsp: Rsp,
+    rdp: Rdp,
 
     ai: AudioInterface,
     vi: VideoInterface,
@@ -34,6 +36,7 @@ impl Interconnect {
         Interconnect {
             pif: Pif::new(boot_rom),
 
+            rdp: Rdp,
             rsp: Rsp::new(),
 
             ai: AudioInterface::default(),
@@ -57,10 +60,13 @@ impl Interconnect {
             Addr::CartDom1(offset) =>
                 BigEndian::read_u32(&self.cart_rom[offset as usize..]),
 
+            Addr::SpDmem(offset) => self.rsp.read_dmem(offset),
             Addr::SpImem(offset) => self.rsp.read_imem(offset),
 
             Addr::SpStatusReg => self.rsp.read_status_reg(),
             Addr::SpDmaBusyReg => self.rsp.read_dma_busy_reg(),
+
+            Addr::DpcStatusReg => self.rdp.read_status_reg(),
 
             Addr::AiDramAddrReg => self.ai.read_dram_addr_reg(),
             Addr::AiLenReg => self.ai.read_len_reg(),
@@ -86,10 +92,13 @@ impl Interconnect {
 
             Addr::CartDom1(offset) => panic!("Cannot write to cart ROM"),
 
+            Addr::SpDmem(offset) => self.rsp.write_dmem(offset, value),
             Addr::SpImem(offset) => self.rsp.write_imem(offset, value),
 
             Addr::SpStatusReg => self.rsp.write_status_reg(value),
             Addr::SpDmaBusyReg => self.rsp.write_dma_busy_reg(value),
+
+            Addr::DpcStatusReg => self.rdp.write_status_reg(value),
 
             Addr::AiDramAddrReg => self.ai.write_dram_addr_reg(value),
             Addr::AiLenReg => self.ai.write_len_reg(value),

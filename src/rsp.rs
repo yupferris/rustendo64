@@ -2,6 +2,7 @@ use super::mem_map::*;
 use super::byteorder::{BigEndian, ByteOrder};
 
 pub struct Rsp {
+    dmem: Box<[u8]>,
     imem: Box<[u8]>,
 
     halt: bool,
@@ -13,12 +14,21 @@ impl Rsp {
     pub fn new() -> Rsp {
         // TODO: Check for correct init hw state
         Rsp {
+            dmem: vec![0; SP_DMEM_LENGTH as usize].into_boxed_slice(),
             imem: vec![0; SP_IMEM_LENGTH as usize].into_boxed_slice(),
 
             halt: true,
             broke: false,
             interrupt_enable: false,
         }
+    }
+
+    pub fn read_dmem(&self, offset: u32) -> u32 {
+        BigEndian::read_u32(&self.dmem[offset as usize..])
+    }
+
+    pub fn write_dmem(&mut self, offset: u32, value: u32) {
+        BigEndian::write_u32(&mut self.dmem[offset as usize..], value);
     }
 
     pub fn read_imem(&self, offset: u32) -> u32 {

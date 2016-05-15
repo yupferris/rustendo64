@@ -10,6 +10,10 @@ const CART_DOM1_ADDR2_START: u32 =  0x1000_0000;
 const CART_DOM1_ADDR2_LENGTH: u32 = 0x0fc0_0000;
 const CART_DOM1_ADDR2_END: u32 =    CART_DOM1_ADDR2_START + CART_DOM1_ADDR2_LENGTH - 1;
 
+const SP_DMEM_START: u32 =          0x0400_0000;
+pub const SP_DMEM_LENGTH: u32 =     0x0000_1000;
+const SP_DMEM_END: u32 =            SP_DMEM_START + SP_DMEM_LENGTH - 1;
+
 const SP_IMEM_START: u32 =          0x0400_1000;
 pub const SP_IMEM_LENGTH: u32 =     0x0000_1000;
 const SP_IMEM_END: u32 =            SP_IMEM_START + SP_IMEM_LENGTH - 1;
@@ -17,6 +21,9 @@ const SP_IMEM_END: u32 =            SP_IMEM_START + SP_IMEM_LENGTH - 1;
 const SP_BASE_REG: u32 =            0x0404_0000;
 const SP_STATUS_REG: u32 =          0x0404_0010;
 const SP_DMA_BUSY_REG: u32 =        0x0404_0018;
+
+const DPC_BASE_REG: u32 =           0x0410_0000;
+const DPC_STATUS_REG: u32 =         0x0410_000c;
 
 const AI_BASE_REG: u32 =            0x0450_0000;
 const AI_DRAM_ADDR_REG: u32 =       0x0450_0000;
@@ -43,10 +50,13 @@ pub enum Addr {
 
     CartDom1(u32),
 
+    SpDmem(u32),
     SpImem(u32),
 
     SpStatusReg,
     SpDmaBusyReg,
+
+    DpcStatusReg,
 
     AiDramAddrReg,
     AiLenReg,
@@ -74,11 +84,16 @@ pub fn map_addr(addr: u32) -> Addr {
         CART_DOM1_ADDR2_START ... CART_DOM1_ADDR2_END =>
             Addr::CartDom1(addr - CART_DOM1_ADDR2_START),
 
+        SP_DMEM_START ... SP_DMEM_END =>
+            Addr::SpDmem(addr - SP_DMEM_START),
+
         SP_IMEM_START ... SP_IMEM_END =>
             Addr::SpImem(addr - SP_IMEM_START),
 
         SP_STATUS_REG => Addr::SpStatusReg,
         SP_DMA_BUSY_REG => Addr::SpDmaBusyReg,
+
+        DPC_STATUS_REG => Addr::DpcStatusReg,
 
         AI_DRAM_ADDR_REG => Addr::AiDramAddrReg,
         AI_LEN_REG => Addr::AiLenReg,

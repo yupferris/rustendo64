@@ -2,6 +2,7 @@ enum_from_primitive! {
     #[derive(Debug)]
     pub enum Opcode {
         Special = 0b000000,
+        RegImm =  0b000001,
 
         Addi =    0b001000,
         Addiu =   0b001001,
@@ -27,10 +28,35 @@ enum_from_primitive! {
 enum_from_primitive! {
     #[derive(Debug)]
     pub enum SpecialOpcode {
-        Srl = 0b000010,
+        Sll =   0b000000,
 
-        Jr =  0b001000,
+        Srl =   0b000010,
 
-        Or =  0b100101
+        Sllv =  0b000100,
+
+        Srlv =  0b000110,
+
+        Jr =    0b001000,
+
+        Multu = 0b011001,
+
+        Mfhi =  0b010000,
+        Mflo =  0b010010,
+
+        Addu =  0b100001,
+
+        Subu =  0b100011,
+        And =   0b100100,
+        Or =    0b100101,
+        Xor =   0b100110,
+
+        Stlu =  0b101011
+    }
+}
+
+enum_from_primitive! {
+    #[derive(Debug)]
+    pub enum RegImmOpcode {
+        Bgezal = 0b10001
     }
 }
