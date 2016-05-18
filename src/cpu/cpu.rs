@@ -108,8 +108,7 @@ impl Cpu {
                         // Update PC before executing delay slot instruction
                         self.reg_pc = self.read_reg_gpr(instr.rs());
 
-                        let delay_slot_instr = self.read_instruction(delay_slot_pc);
-                        self.execute_instruction(delay_slot_instr);
+                        execute_delay_slot(delay_slot_pc);
                     }
 
                     Multu => {
@@ -237,6 +236,12 @@ impl Cpu {
             }
         }
     }
+    
+    fn execute_delay_slot(&mut self, delay_slot_pc: u64) {
+        let delay_slot_instr = self.read_instruction(delay_slot_pc);
+        println!("reg_pc {:#018X}: {:?} (DELAY)", self.reg_pc, instr);
+        self.execute_instruction(delay_slot_instr);
+    }
 
     fn branch<F>(&mut self, instr: Instruction, write_link: bool, f: F) -> bool where F: FnOnce(u64, u64) -> bool {
         let rs = self.read_reg_gpr(instr.rs());
@@ -257,9 +262,7 @@ impl Cpu {
             self.reg_pc =
                 self.reg_pc.wrapping_add(sign_extended_offset);
 
-            let delay_slot_instr = self.read_instruction(delay_slot_pc);
-            println!("reg_pc {:#018X}: {:?} (DELAY)", self.reg_pc, instr);
-            self.execute_instruction(delay_slot_instr);
+            execute_delay_slot(delay_slot_pc);
         }
 
         is_taken
