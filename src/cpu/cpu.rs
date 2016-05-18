@@ -108,7 +108,7 @@ impl Cpu {
                         // Update PC before executing delay slot instruction
                         self.reg_pc = self.read_reg_gpr(instr.rs());
 
-                        execute_delay_slot(delay_slot_pc);
+                        self.execute_delay_slot(delay_slot_pc);
                     }
 
                     Multu => {
@@ -262,7 +262,7 @@ impl Cpu {
             self.reg_pc =
                 self.reg_pc.wrapping_add(sign_extended_offset);
 
-            execute_delay_slot(delay_slot_pc);
+            self.execute_delay_slot(delay_slot_pc);
         }
 
         is_taken
