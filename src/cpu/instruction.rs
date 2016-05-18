@@ -16,13 +16,13 @@ impl Instruction {
     }
 
     #[inline(always)]
-    pub fn rs(&self) -> usize {
-        ((self.0 >> 21) & 0b11111) as usize
+    pub fn rs(&self) -> u32 {
+        ((self.0 >> 21) & 0b11111)
     }
 
     #[inline(always)]
-    pub fn rt(&self) -> usize {
-        ((self.0 >> 16) & 0b11111) as usize
+    pub fn rt(&self) -> u32 {
+        ((self.0 >> 16) & 0b11111)
     }
 
     #[inline(always)]
@@ -78,3 +78,4 @@ impl fmt::Debug for Instruction {
         }
     }
 }
+
