@@ -239,7 +239,7 @@ impl Cpu {
     
     fn execute_delay_slot(&mut self, delay_slot_pc: u64) {
         let delay_slot_instr = self.read_instruction(delay_slot_pc);
-        println!("reg_pc {:#018X}: {:?} (DELAY)", self.reg_pc, instr);
+        println!("reg_pc {:#018X}: {:?} (DELAY)", delay_slot_pc, delay_slot_instr);
         self.execute_instruction(delay_slot_instr);
     }
 
