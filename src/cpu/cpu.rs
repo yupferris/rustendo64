@@ -258,6 +258,7 @@ impl Cpu {
                 self.reg_pc.wrapping_add(sign_extended_offset);
 
             let delay_slot_instr = self.read_instruction(delay_slot_pc);
+            println!("reg_pc {:#018X}: {:?} (DELAY)", self.reg_pc, instr);
             self.execute_instruction(delay_slot_instr);
         }
 
