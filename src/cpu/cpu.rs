@@ -75,46 +75,35 @@ impl Cpu {
             Special => {
                 match instr.special_op() {
                     Sll => {
-                        let value = self.read_reg_gpr(instr.rt()) << instr.sa();
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
+                        self.execute_rtype_instruction(instr, |_, rt, sa| ((rt << sa) as i32) as u64);
                     }
 
                     Srl => {
-                        let value = self.read_reg_gpr(instr.rt()) >> instr.sa();
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
+                        self.execute_rtype_instruction(instr, |_, rt, sa| ((rt >> sa) as i32) as u64);
                     }
 
                     Sllv => {
-                        let shift = self.read_reg_gpr(instr.rs()) & 0b11111;
-                        let value = self.read_reg_gpr(instr.rt()) << shift;
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| ((rt << rs) as i32) as u64);
                     }
 
                     Srlv => {
-                        let rs = self.read_reg_gpr(instr.rs()) as u32;
-                        let rt = self.read_reg_gpr(instr.rt()) as u32;
-                        let shift = rs & 0b11111;
-                        let value = rt >> shift;
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| (((rt as u32) >> (rs as u32)) as i32) as u64);
                     }
 
                     Jr => {
                         let delay_slot_pc = self.reg_pc;
 
                         // Update PC before executing delay slot instruction
-                        self.reg_pc = self.read_reg_gpr(instr.rs());
+                        self.reg_pc = self.read_reg_gpr(instr.rs() as usize);
 
                         let delay_slot_instr = self.read_instruction(delay_slot_pc);
                         self.execute_instruction(delay_slot_instr);
                     }
-
+                    
+                    // TODO: Untouched, due to conflicting merge requests. Cange to use execute_rtype_instruction.
                     Multu => {
-                        let rs = self.read_reg_gpr(instr.rs()) as u32;
-                        let rt = self.read_reg_gpr(instr.rt()) as u32;
+                        let rs = self.read_reg_gpr(instr.rs() as usize) as u32;
+                        let rt = self.read_reg_gpr(instr.rt() as usize) as u32;
 
                         let res = ((rs * rt) as i32) as u64;
 
@@ -125,51 +114,37 @@ impl Cpu {
                     }
 
                     Mfhi => {
-                        let value = self.reg_hi;
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        let ret = self.reg_hi;
+                        self.execute_rtype_instruction(instr, |_, _, _| ret);
                     }
 
                     Mflo => {
-                        let value = self.reg_lo;
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        let ret = self.reg_lo;
+                        self.execute_rtype_instruction(instr, |_, _, _| ret);
                     }
 
                     Addu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = (rs.wrapping_add(rt) as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| (rs.wrapping_add(rt) as i32) as u64);
                     }
 
                     Subu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = (rs.wrapping_sub(rt) as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| (rs.wrapping_sub(rt) as i32) as u64);
                     }
 
                     And => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = rs & rt;
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| rs & rt);
                     }
 
                     Or => {
-                        let value = self.read_reg_gpr(instr.rs()) | self.read_reg_gpr(instr.rt());
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| rs | rt);
                     }
 
                     Xor => {
-                        let value = self.read_reg_gpr(instr.rs()) ^ self.read_reg_gpr(instr.rt());
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| rs ^ rt);
                     }
 
                     Stlu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = if rs < rt { 1 } else { 0 };
-                        self.write_reg_gpr(instr.rd() as usize, value);
+                        self.execute_rtype_instruction(instr, |rs, rt, _| if rs < rt { 1 } else { 0 });
                     }
                 }
             }
@@ -182,31 +157,22 @@ impl Cpu {
 
             Addi => {
                 // TODO: Handle exception overflow
-                let res =
-                    self.read_reg_gpr(instr.rs()) + instr.imm_sign_extended();
-                self.write_reg_gpr(instr.rt(), res);
+                self.execute_itype_instruction(instr, |rs, _, imm_s| rs + imm_s);
             }
             Addiu => {
-                let res = self.read_reg_gpr(instr.rs())
-                    .wrapping_add(instr.imm_sign_extended());
-                self.write_reg_gpr(instr.rt(), res);
+                self.execute_itype_instruction(instr, |rs, _, imm_s| rs.wrapping_add(imm_s));
             }
             Andi => {
-                let res = self.read_reg_gpr(instr.rs()) &
-                    (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt(), res);
+                self.execute_itype_instruction(instr, |rs, imm, _| rs & imm);
             }
             Ori => {
-                let res = self.read_reg_gpr(instr.rs()) |
-                    (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt(), res);
+                self.execute_itype_instruction(instr, |rs, imm, _| rs | imm);
             }
             Lui => {
-                let value = ((instr.imm() << 16) as i32) as u64;
-                self.write_reg_gpr(instr.rt(), value);
+                self.execute_itype_instruction(instr, |_, imm, _| ((imm << 16) as i32) as u64);
             }
             Mtc0 => {
-                let data = self.read_reg_gpr(instr.rt());
+                let data = self.read_reg_gpr(instr.rt() as usize);
                 self.cp0.write_reg(instr.rd(), data);
             }
 
@@ -217,30 +183,52 @@ impl Cpu {
             Bnel => self.branch_likely(instr, |rs, rt| rs != rt),
 
             Lw => {
-                let base = instr.rs();
+                let base = instr.rs() as usize;
 
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr =
                     self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
-                self.write_reg_gpr(instr.rt(), mem);
+                self.write_reg_gpr(instr.rt() as usize, mem);
             },
 
             Sw => {
-                let base = instr.rs();
+                let base = instr.rs() as usize;
 
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr =
                     self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
-                let mem = self.read_reg_gpr(instr.rt()) as u32;
+                let mem = self.read_reg_gpr(instr.rt() as usize) as u32;
                 self.write_word(virt_addr, mem);
             }
         }
     }
+    
+    fn execute_itype_instruction<F>(&mut self, instr: Instruction, f: F) where F: FnOnce(u64, u64, u64) -> u64
+    {
+    	// fn F(rs: u64, imm: u64, imm_s: u64)
+    	let rs = self.read_reg_gpr(instr.rs() as usize);
+    	let rt = instr.rt() as usize;
+    	let imm = instr.imm() as u64;
+    	let imm_s = instr.imm_sign_extended();
+    	
+    	self.write_reg_gpr(rt, f(rs, imm, imm_s));
+    }
+    
+    fn execute_rtype_instruction<F>(&mut self, instr: Instruction, f: F) where F: FnOnce(u64, u64, u64) -> u64
+    {
+    	// fn F(rs: u64, rt: u64, sa: u64)
+    	let rs = self.read_reg_gpr(instr.rs() as usize);
+        let rt = self.read_reg_gpr(instr.rt() as usize);
+        let rd = instr.rd() as usize;
+        let sa = instr.sa() as u64;
+        
+        self.write_reg_gpr(rd, f(rs, rt, sa));
+    }
 
     fn branch<F>(&mut self, instr: Instruction, write_link: bool, f: F) -> bool where F: FnOnce(u64, u64) -> bool {
-        let rs = self.read_reg_gpr(instr.rs());
-        let rt = self.read_reg_gpr(instr.rt());
+        let rs = self.read_reg_gpr(instr.rs() as usize);
+        let rt = self.read_reg_gpr(instr.rt() as usize);
         let is_taken = f(rs, rt);
 
         let delay_slot_pc = self.reg_pc;
