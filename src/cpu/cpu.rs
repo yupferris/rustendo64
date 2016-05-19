@@ -59,9 +59,10 @@ impl Cpu {
 
     pub fn run_instruction(&mut self) {
         let instr = self.read_instruction(self.reg_pc);
-
-        println!("reg_pc {:#018X}: {:?}", self.reg_pc, instr);
-
+        match instr.opcode() {
+            Special => { println!("reg_pc {:#018X}: Special: {:?}", self.reg_pc, instr.special_op()); }
+            _ =>       { println!("reg_pc {:#018X}: {:?}", self.reg_pc, instr); }
+        }
         self.reg_pc += 4;
         self.execute_instruction(instr);
     }
