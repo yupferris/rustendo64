@@ -1,5 +1,5 @@
 const PIF_ROM_START: u32 =          0x1fc0_0000;
-const PIF_ROM_LENGTH: u32 =         0x0000_07c0;
+pub const PIF_ROM_LENGTH: u32 =     0x0000_07c0;
 const PIF_ROM_END: u32 =            PIF_ROM_START + PIF_ROM_LENGTH - 1;
 
 const PIF_RAM_START: u32 =          0x1fc0_07c0;
