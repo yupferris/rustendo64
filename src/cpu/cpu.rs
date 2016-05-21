@@ -61,6 +61,7 @@ impl Cpu {
         let instr = self.read_instruction(self.reg_pc);
         match instr.opcode() {
             Special => { println!("reg_pc {:#018X}: Special: {:?}", self.reg_pc, instr.special_op()); }
+            RegImm =>  { println!("reg_pc {:#018X}: RegImm: {:?}", self.reg_pc, instr.reg_imm_op()); }
             _ =>       { println!("reg_pc {:#018X}: {:?}", self.reg_pc, instr); }
         }
         self.reg_pc += 4;
