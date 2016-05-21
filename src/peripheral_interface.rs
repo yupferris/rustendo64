@@ -9,7 +9,7 @@ impl PeripheralInterface {
 
     pub fn write_status_reg(&mut self, value: u32) {
         if (value & (1 << 0)) != 0 {
-            println!("WARNING: PI reset controller bit written not yet implemented");
+            println!("WARNING: PI reset controller bit written but not yet implemented");
         }
 
         if (value & (1 << 1)) != 0 {
