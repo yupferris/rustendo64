@@ -241,8 +241,8 @@ impl Cpu {
         let delay_slot_instr = self.read_instruction(delay_slot_pc);
         match delay_slot_instr.opcode() {
             Special => { println!("reg_pc {:#018X} Special: {:?} (DELAY)", delay_slot_pc, delay_slot_instr.special_op()); }
-            RegImm =>  { println!("reg_pc {:#018X}: RegImm: {:?} (DELAY)", self.reg_pc, instr.reg_imm_op()); }
-            _ => { println!("reg_pc {:#018X}: {:?} (DELAY)", delay_slot_pc, delay_slot_instr); }
+            RegImm =>  { println!("reg_pc {:#018X}: RegImm: {:?} (DELAY)", delay_slot_pc, delay_slot_instr.reg_imm_op()); }
+            _ => { println!("reg_pc {:#018X}: {:?} (DELAY)", delay_slot_pc, delay_slot_instr.opcode()); }
         }
         self.execute_instruction(delay_slot_instr);
     }
