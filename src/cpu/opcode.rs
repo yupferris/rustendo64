@@ -50,7 +50,7 @@ enum_from_primitive! {
         Or =    0b100101,
         Xor =   0b100110,
 
-        Stlu =  0b101011
+        Sltu =  0b101011
     }
 }
 

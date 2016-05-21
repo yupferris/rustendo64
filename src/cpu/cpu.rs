@@ -165,7 +165,7 @@ impl Cpu {
                         self.write_reg_gpr(instr.rd() as usize, value);
                     }
 
-                    Stlu => {
+                    Sltu => {
                         let rs = self.read_reg_gpr(instr.rs());
                         let rt = self.read_reg_gpr(instr.rt());
                         let value = if rs < rt { 1 } else { 0 };
