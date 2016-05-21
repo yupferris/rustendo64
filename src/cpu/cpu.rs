@@ -240,15 +240,15 @@ impl Cpu {
     fn print_instr(&self, instr: Instruction, pc: u64, delay: bool) {
         print!("reg_pc {:018X}: ", pc);
         match instr.opcode() {
-            Special => { print!("Special: {:?}", instr.special_op()); }
-            RegImm =>  { print!("RegImm: {:?}", instr.reg_imm_op()); }
-            _ => { print!("{:?}", instr); }
-        };
+            Special => print!("Special: {:?}", instr.special_op()),
+            RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
+            _ => print!("{:?}", instr)
+        }
         if delay {
             println!(" (DELAY)");
         } else {
             println!("");
-        };
+        }
     }
 
     fn execute_delay_slot(&mut self, delay_slot_pc: u64) {
