@@ -29,6 +29,11 @@ At the end of each episode, I mark the latest commit with a tag so you can see w
 * [Micro-64](http://micro-64.com/features/aafeatures.shtml)
 * [PeterLemon's ROMs](https://github.com/PeterLemon/N64)
 
+## Building and Running
+Currently, the only dependency for building is Rust itself, which can be downloaded [here](https://www.rust-lang.org/downloads.html).
+
+An N64 BIOS (PIF ROM) is required to boot the emulator. The ROM I've been testing with thus far has a SHA-1 of `9174eadc0f0ea2654c95fd941406ab46b9dc9bdd`.
+
 ## License
 
 Licensed under either of
