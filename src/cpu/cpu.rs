@@ -9,6 +9,21 @@ use std::fmt;
 
 const NUM_GPR: usize = 32;
 
+enum SignExtendResult {
+    Yes,
+    No
+}
+
+enum WriteLink {
+    Yes,
+    No
+}
+
+enum DelaySlot {
+    Yes,
+    No
+}
+
 pub struct Cpu {
     reg_gpr: [u64; NUM_GPR],
     reg_fpr: [f64; NUM_GPR],
@@ -60,7 +75,7 @@ impl Cpu {
     pub fn run_instruction(&mut self) {
         let instr = self.read_instruction(self.reg_pc);
 
-        self.print_instr(instr, self.reg_pc, false);
+        self.print_instr(instr, self.reg_pc, DelaySlot::No);
 
         self.reg_pc += 4;
         self.execute_instruction(instr);
@@ -74,33 +89,26 @@ impl Cpu {
         match instr.opcode() {
             Special => {
                 match instr.special_op() {
-                    Sll => {
-                        let value = self.read_reg_gpr(instr.rt()) << instr.sa();
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
-                    }
+                    Sll => self.reg_instr(instr, |_, rt, sa| rt << sa),
+                    Srl => self.reg_instr(instr, |_, rt, sa| {
+                        let rt = rt as u32;
+                        (rt >> sa) as u64
+                    }),
 
-                    Srl => {
-                        let value = self.read_reg_gpr(instr.rt()) >> instr.sa();
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
-                    }
+                    Sllv =>
+                        self.reg_instr(instr, |rs, rt, _| {
+                            // TODO: Check to see if this is actually sa
+                            let shift = rs & 0b11111;
+                            rt << shift
+                        }),
 
-                    Sllv => {
-                        let shift = self.read_reg_gpr(instr.rs()) & 0b11111;
-                        let value = self.read_reg_gpr(instr.rt()) << shift;
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
-                    }
-
-                    Srlv => {
-                        let rs = self.read_reg_gpr(instr.rs()) as u32;
-                        let rt = self.read_reg_gpr(instr.rt()) as u32;
-                        let shift = rs & 0b11111;
-                        let value = rt >> shift;
-                        let sign_extended_value = (value as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
-                    }
+                    Srlv =>
+                        self.reg_instr(instr, |rs, rt, _| {
+                            let rs = rs as u32;
+                            let rt = rt as u32;
+                            let shift = rs & 0b11111;
+                            (rt >> shift) as u64
+                        }),
 
                     Jr => {
                         let delay_slot_pc = self.reg_pc;
@@ -127,90 +135,47 @@ impl Cpu {
                         let value = self.reg_hi;
                         self.write_reg_gpr(instr.rd() as usize, value);
                     }
-
                     Mflo => {
                         let value = self.reg_lo;
                         self.write_reg_gpr(instr.rd() as usize, value);
                     }
 
-                    Addu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = (rs.wrapping_add(rt) as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
+                    Addu => self.reg_instr(instr, |rs, rt, _| rs.wrapping_add(rt)),
+                    Subu => self.reg_instr(instr, |rs, rt, _| rs.wrapping_sub(rt)),
 
-                    Subu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = (rs.wrapping_sub(rt) as i32) as u64;
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
+                    And => self.reg_instr(instr, |rs, rt, _| rs & rt),
+                    Or => self.reg_instr(instr, |rs, rt, _| rs | rt),
+                    Xor => self.reg_instr(instr, |rs, rt, _| rs ^ rt),
 
-                    And => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = rs & rt;
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
-
-                    Or => {
-                        let value = self.read_reg_gpr(instr.rs()) | self.read_reg_gpr(instr.rt());
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
-
-                    Xor => {
-                        let value = self.read_reg_gpr(instr.rs()) ^ self.read_reg_gpr(instr.rt());
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
-
-                    Sltu => {
-                        let rs = self.read_reg_gpr(instr.rs());
-                        let rt = self.read_reg_gpr(instr.rt());
-                        let value = if rs < rt { 1 } else { 0 };
-                        self.write_reg_gpr(instr.rd() as usize, value);
-                    }
+                    Sltu => self.reg_instr(instr, |rs, rt, _| if rs < rt { 1 } else { 0 })
                 }
             }
 
             RegImm => {
                 match instr.reg_imm_op() {
-                    Bgezal => { self.branch(instr, true, |rs, _| (rs as i64) >= 0); }
+                    Bgezal => { self.branch(instr, WriteLink::Yes, |rs, _| (rs as i64) >= 0); }
                 }
             }
 
-            Addi => {
-                // TODO: Handle exception overflow
-                let res =
-                    self.read_reg_gpr(instr.rs()) + instr.imm_sign_extended();
-                self.write_reg_gpr(instr.rt(), res);
-            }
-            Addiu => {
-                let res = self.read_reg_gpr(instr.rs())
-                    .wrapping_add(instr.imm_sign_extended());
-                self.write_reg_gpr(instr.rt(), res);
-            }
-            Andi => {
-                let res = self.read_reg_gpr(instr.rs()) &
-                    (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt(), res);
-            }
-            Ori => {
-                let res = self.read_reg_gpr(instr.rs()) |
-                    (instr.imm() as u64);
-                self.write_reg_gpr(instr.rt(), res);
-            }
-            Lui => {
-                let value = ((instr.imm() << 16) as i32) as u64;
-                self.write_reg_gpr(instr.rt(), value);
-            }
+            Addi =>
+                self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| {
+                    // TODO: Handle overflow exception
+                    rs + imm_sign_extended
+                }),
+            Addiu => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| rs.wrapping_add(imm_sign_extended)),
+
+            Andi => self.imm_instr(instr, SignExtendResult::No, |rs, imm, _| rs & imm),
+            Ori => self.imm_instr(instr, SignExtendResult::No, |rs, imm, _| rs | imm),
+
+            Lui => self.imm_instr(instr, SignExtendResult::Yes, |_, imm, _| imm << 16),
+
             Mtc0 => {
                 let data = self.read_reg_gpr(instr.rt());
                 self.cp0.write_reg(instr.rd(), data);
             }
 
-            Beq => { self.branch(instr, false, |rs, rt| rs == rt); },
-            Bne => { self.branch(instr, false, |rs, rt| rs != rt); },
+            Beq => { self.branch(instr, WriteLink::No, |rs, rt| rs == rt); },
+            Bne => { self.branch(instr, WriteLink::No, |rs, rt| rs != rt); },
 
             Beql => self.branch_likely(instr, |rs, rt| rs == rt),
             Bnel => self.branch_likely(instr, |rs, rt| rs != rt),
@@ -219,8 +184,7 @@ impl Cpu {
                 let base = instr.rs();
 
                 let sign_extended_offset = instr.offset_sign_extended();
-                let virt_addr =
-                    self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
+                let virt_addr = self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = (self.read_word(virt_addr) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), mem);
             },
@@ -229,52 +193,51 @@ impl Cpu {
                 let base = instr.rs();
 
                 let sign_extended_offset = instr.offset_sign_extended();
-                let virt_addr =
-                    self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
+                let virt_addr = self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = self.read_reg_gpr(instr.rt()) as u32;
                 self.write_word(virt_addr, mem);
             }
         }
     }
 
-    fn print_instr(&self, instr: Instruction, pc: u64, delay: bool) {
-        print!("reg_pc {:018X}: ", pc);
-        match instr.opcode() {
-            Special => print!("Special: {:?}", instr.special_op()),
-            RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
-            _ => print!("{:?}", instr)
-        }
-        if delay {
-            println!(" (DELAY)");
-        } else {
-            println!("");
-        }
+    fn imm_instr<F>(&mut self, instr: Instruction, sign_extend_result: SignExtendResult, f: F) where F: FnOnce(u64, u64, u64) -> u64 {
+        let rs = self.read_reg_gpr(instr.rs());
+        let imm = instr.imm() as u64;
+        let imm_sign_extended = instr.imm_sign_extended();
+        let value = f(rs, imm, imm_sign_extended);
+        let sign_extended_value = (value as i32) as u64;
+        let value = match sign_extend_result {
+            SignExtendResult::Yes => sign_extended_value,
+            _ => value
+        };
+        self.write_reg_gpr(instr.rt(), value);
     }
 
-    fn execute_delay_slot(&mut self, delay_slot_pc: u64) {
-        let delay_slot_instr = self.read_instruction(delay_slot_pc);
-        self.print_instr(delay_slot_instr, delay_slot_pc, true);
-        self.execute_instruction(delay_slot_instr);
+    fn reg_instr<F>(&mut self, instr: Instruction, f: F) where F: FnOnce(u64, u64, u32) -> u64 {
+        let rs = self.read_reg_gpr(instr.rs());
+        let rt = self.read_reg_gpr(instr.rt());
+        let sa = instr.sa();
+        let value = f(rs, rt, sa);
+        let sign_extended_value = (value as i32) as u64;
+        self.write_reg_gpr(instr.rd() as usize, sign_extended_value);
     }
 
-    fn branch<F>(&mut self, instr: Instruction, write_link: bool, f: F) -> bool where F: FnOnce(u64, u64) -> bool {
+    fn branch<F>(&mut self, instr: Instruction, write_link: WriteLink, f: F) -> bool where F: FnOnce(u64, u64) -> bool {
         let rs = self.read_reg_gpr(instr.rs());
         let rt = self.read_reg_gpr(instr.rt());
         let is_taken = f(rs, rt);
 
         let delay_slot_pc = self.reg_pc;
 
-        if write_link {
+        if let WriteLink::Yes = write_link {
             let link_address = delay_slot_pc + 4;
             self.write_reg_gpr(31, link_address);
         }
 
         if is_taken {
-            let sign_extended_offset =
-                instr.offset_sign_extended() << 2;
+            let sign_extended_offset = instr.offset_sign_extended() << 2;
             // Update PC before executing delay slot instruction
-            self.reg_pc =
-                self.reg_pc.wrapping_add(sign_extended_offset);
+            self.reg_pc = self.reg_pc.wrapping_add(sign_extended_offset);
 
             self.execute_delay_slot(delay_slot_pc);
         }
@@ -283,10 +246,29 @@ impl Cpu {
     }
 
     fn branch_likely<F>(&mut self, instr: Instruction, f: F) where F: FnOnce(u64, u64) -> bool {
-        if !self.branch(instr, false, f) {
+        if !self.branch(instr, WriteLink::No, f) {
             // Skip over delay slot instruction when not branching
             self.reg_pc = self.reg_pc.wrapping_add(4);
         }
+    }
+
+    fn print_instr(&self, instr: Instruction, pc: u64, delay_slot: DelaySlot) {
+        print!("reg_pc {:018X}: ", pc);
+        match instr.opcode() {
+            Special => print!("Special: {:?}", instr.special_op()),
+            RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
+            _ => print!("{:?}", instr)
+        }
+        match delay_slot {
+            DelaySlot::Yes => println!(" (DELAY)"),
+            _ => println!("")
+        };
+    }
+
+    fn execute_delay_slot(&mut self, delay_slot_pc: u64) {
+        let delay_slot_instr = self.read_instruction(delay_slot_pc);
+        self.print_instr(delay_slot_instr, delay_slot_pc, DelaySlot::Yes);
+        self.execute_instruction(delay_slot_instr);
     }
 
     fn read_word(&self, virt_addr: u64) -> u32 {
