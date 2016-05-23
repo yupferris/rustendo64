@@ -175,7 +175,7 @@ impl Cpu {
                         _ => {}
                     };
                     res
-                    }),
+                }),
             Addiu => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| rs.wrapping_add(imm_sign_extended)),
 
             Andi => self.imm_instr(instr, SignExtendResult::No, |rs, imm, _| rs & imm),
