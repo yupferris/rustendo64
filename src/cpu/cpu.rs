@@ -159,8 +159,22 @@ impl Cpu {
 
             Addi =>
                 self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| {
-                    // TODO: Handle overflow exception
-                    rs + imm_sign_extended
+                    let rs_positive = (rs >> 31) & 1 == 0;
+                    let imm_positive = (imm_sign_extended >> 31) & 1 == 0;
+                    let res = rs.wrapping_add(imm_sign_extended);
+                    let res_positive = (res >> 31 & 1) == 0;
+                    match (rs_positive, imm_positive, res_positive) {
+                        (true, true, false)  => {
+                            panic!("Integer overflow exception not implemented! (p+p=n) {:016X} + {:016X} != {:016X}",
+                                res, imm_sign_extended, res);
+                        }
+                        (false, false, true) => {
+                            panic!("Integer overflow exception not implemented! (n+n=p) {:016X} + {:016X} != {:016X}",
+                                res, imm_sign_extended, res);
+                        }
+                        _ => {}
+                    };
+                    res
                 }),
             Addiu => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| rs.wrapping_add(imm_sign_extended)),
 
