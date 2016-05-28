@@ -1,4 +1,5 @@
 #![deny(trivial_casts, trivial_numeric_casts)]
+
 extern crate byteorder;
 
 extern crate num;
@@ -7,16 +8,6 @@ extern crate num;
 extern crate enum_primitive;
 
 mod n64;
-mod cpu;
-mod pif;
-mod rsp;
-mod rdp;
-mod audio_interface;
-mod video_interface;
-mod peripheral_interface;
-mod serial_interface;
-mod interconnect;
-mod mem_map;
 
 use std::env;
 use std::fs;
