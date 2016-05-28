@@ -25,7 +25,8 @@ impl Debugger {
             let command = read_stdin().parse();
             match command {
                 Ok(Command::Step) => self.step(),
-                _ => println!("Invalid input")
+                Ok(Command::Exit) => break,
+                Err(_) => println!("Invalid input")
             }
         }
     }
