@@ -68,6 +68,10 @@ impl Cpu {
         self.virt_addr_to_phys_addr(self.current_pc_virt())
     }
 
+    pub fn will_execute_from_delay_slot(&self) -> bool {
+        self.delay_slot_pc.is_some()
+    }
+
     pub fn step(&mut self, interconnect: &mut Interconnect) {
         if let Some(pc) = self.delay_slot_pc {
             let instr = self.read_instruction(interconnect, pc);

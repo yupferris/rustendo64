@@ -1,6 +1,8 @@
 mod command;
 
 use n64::*;
+use n64::cpu::opcode::Opcode::*;
+use n64::cpu::instruction::*;
 use n64::mem_map::*;
 use n64::mem_map::Addr::*;
 
@@ -36,22 +38,24 @@ impl Debugger {
     pub fn step(&mut self) {
         let current_pc = self.n64.cpu().current_pc_phys();
         let addr = map_addr(current_pc as u32);
-        let instr = match addr {
-            PifRom(offset) => 0, // TODO
+        let instr = Instruction(match addr {
+            PifRom(offset) => self.n64.interconnect().pif().read_boot_rom(offset),
             _ => panic!("Debugger can't inspect address: {:?}", addr)
-        };
+        });
 
-        println!("{:018X}", current_pc);
+        print!("{:018X}: ", current_pc);
 
-        /*match instr.opcode() {
+        match instr.opcode() {
             Special => print!("Special: {:?}", instr.special_op()),
             RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
             _ => print!("{:?}", instr)
         }
-        match delay_slot {
-            DelaySlot::Yes => println!(" (DELAY)"),
-            _ => println!("")
-        };*/
+
+        if self.n64.cpu().will_execute_from_delay_slot() {
+            println!(" (DELAY)");
+        } else {
+            println!("");
+        }
 
         self.n64.step();
     }

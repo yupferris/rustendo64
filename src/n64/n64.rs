@@ -19,6 +19,10 @@ impl N64 {
         &self.cpu
     }
 
+    pub fn interconnect(&self) -> &Interconnect {
+        &self.interconnect
+    }
+
     pub fn step(&mut self) {
         self.cpu.step(&mut self.interconnect);
     }

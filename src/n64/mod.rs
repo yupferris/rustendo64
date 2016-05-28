@@ -1,5 +1,5 @@
 mod n64;
-mod cpu;
+pub mod cpu;
 mod pif;
 mod rsp;
 mod rdp;
