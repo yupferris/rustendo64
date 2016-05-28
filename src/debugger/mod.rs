@@ -11,13 +11,17 @@ use self::command::*;
 use std::io::*;
 
 pub struct Debugger {
-    n64: N64
+    n64: N64,
+
+    last_command: Option<Command>
 }
 
 impl Debugger {
     pub fn new(n64: N64) -> Debugger {
         Debugger {
-            n64: n64
+            n64: n64,
+
+            last_command: None
         }
     }
 
@@ -26,12 +30,21 @@ impl Debugger {
             print!("r64> ");
             stdout().flush().unwrap();
 
-            let command = read_stdin().parse();
+            let command = match (read_stdin().parse(), self.last_command) {
+                (Ok(Command::Repeat), Some(c)) => Ok(c),
+                (Ok(Command::Repeat), None) => Err("No last command"),
+                (Ok(c), _) => Ok(c),
+                (Err(_), _) => Err("Invalid input")
+            };
+
             match command {
                 Ok(Command::Step) => self.step(),
                 Ok(Command::Exit) => break,
-                Err(_) => println!("Invalid input")
+                Ok(Command::Repeat) => unreachable!(),
+                Err(e) => println!("{}", e)
             }
+
+            self.last_command = command.ok();
         }
     }
 
@@ -46,8 +59,8 @@ impl Debugger {
         print!("{:018X}: ", current_pc);
 
         match instr.opcode() {
-            Special => print!("Special: {:?}", instr.special_op()),
-            RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
+            Special => print!("{:?} (Special)", instr.special_op()),
+            RegImm => print!("{:?} (RegImm)", instr.reg_imm_op()),
             _ => print!("{:?}", instr)
         }
 
