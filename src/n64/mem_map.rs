@@ -44,6 +44,7 @@ const PI_BSD_DOM1_RLS_REG: u32 =    0x0460_0020;
 const SI_BASE_REG: u32 =            0x0480_0000;
 const SI_STATUS_REG: u32 =          0x0480_0018;
 
+#[derive(Debug)]
 pub enum Addr {
     PifRom(u32),
     PifRam(u32),

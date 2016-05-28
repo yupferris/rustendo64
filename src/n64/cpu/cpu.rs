@@ -1,4 +1,4 @@
-use super::super::interconnect;
+use super::super::interconnect::*;
 use super::cp0;
 use super::opcode::Opcode::*;
 use super::opcode::SpecialOpcode::*;
@@ -35,13 +35,11 @@ pub struct Cpu {
 
     cp0: cp0::Cp0,
 
-    interconnect: interconnect::Interconnect,
-
     delay_slot_pc: Option<u64>
 }
 
 impl Cpu {
-    pub fn new(interconnect: interconnect::Interconnect) -> Cpu {
+    pub fn new() -> Cpu {
         Cpu {
             reg_gpr: [0; NUM_GPR],
             reg_fpr: [0.0; NUM_GPR],
@@ -58,35 +56,37 @@ impl Cpu {
 
             cp0: cp0::Cp0::default(),
 
-            interconnect: interconnect,
-
             delay_slot_pc: None
         }
     }
 
-    pub fn reg_pc(&self) -> u64 {
-        self.reg_pc
+    pub fn current_pc_virt(&self) -> u64 {
+        self.delay_slot_pc.unwrap_or(self.reg_pc)
     }
 
-    pub fn step(&mut self) {
+    pub fn current_pc_phys(&self) -> u64 {
+        self.virt_addr_to_phys_addr(self.current_pc_virt())
+    }
+
+    pub fn step(&mut self, interconnect: &mut Interconnect) {
         if let Some(pc) = self.delay_slot_pc {
-            let instr = self.read_instruction(pc);
-            self.execute_instruction(instr);
+            let instr = self.read_instruction(interconnect, pc);
+            self.execute_instruction(interconnect, instr);
 
             self.delay_slot_pc = None;
         } else {
-            let instr = self.read_instruction(self.reg_pc);
+            let instr = self.read_instruction(interconnect, self.reg_pc);
 
             self.reg_pc += 4;
-            self.execute_instruction(instr);
+            self.execute_instruction(interconnect, instr);
         }
     }
 
-    fn read_instruction(&self, addr: u64) -> Instruction {
-        Instruction(self.read_word(addr))
+    fn read_instruction(&self, interconnect: &mut Interconnect, addr: u64) -> Instruction {
+        Instruction(self.read_word(interconnect, addr))
     }
 
-    fn execute_instruction(&mut self, instr: Instruction) {
+    fn execute_instruction(&mut self, interconnect: &mut Interconnect, instr: Instruction) {
         match instr.opcode() {
             Special => {
                 match instr.special_op() {
@@ -186,7 +186,7 @@ impl Cpu {
 
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr = self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
-                let mem = (self.read_word(virt_addr) as i32) as u64;
+                let mem = (self.read_word(interconnect, virt_addr) as i32) as u64;
                 self.write_reg_gpr(instr.rt(), mem);
             },
 
@@ -196,7 +196,7 @@ impl Cpu {
                 let sign_extended_offset = instr.offset_sign_extended();
                 let virt_addr = self.read_reg_gpr(base).wrapping_add(sign_extended_offset);
                 let mem = self.read_reg_gpr(instr.rt()) as u32;
-                self.write_word(virt_addr, mem);
+                self.write_word(interconnect, virt_addr, mem);
             }
         }
     }
@@ -253,14 +253,14 @@ impl Cpu {
         }
     }
 
-    fn read_word(&self, virt_addr: u64) -> u32 {
+    fn read_word(&self, interconnect: &mut Interconnect, virt_addr: u64) -> u32 {
         let phys_addr = self.virt_addr_to_phys_addr(virt_addr);
-        self.interconnect.read_word(phys_addr as u32)
+        interconnect.read_word(phys_addr as u32)
     }
 
-    fn write_word(&mut self, virt_addr: u64, value: u32) {
+    fn write_word(&mut self, interconnect: &mut Interconnect, virt_addr: u64, value: u32) {
         let phys_addr = self.virt_addr_to_phys_addr(virt_addr);
-        self.interconnect.write_word(phys_addr as u32, value);
+        interconnect.write_word(phys_addr as u32, value);
     }
 
     fn virt_addr_to_phys_addr(&self, virt_addr: u64) -> u64 {
@@ -343,7 +343,6 @@ impl fmt::Debug for Cpu {
             self.reg_fcr31
         ));
 
-        try!(writeln!(f, "{:#?}", self.cp0));
-        writeln!(f, "{:#?}", self.interconnect)
+        writeln!(f, "{:#?}", self.cp0)
     }
 }

@@ -52,6 +52,10 @@ impl Interconnect {
         }
     }
 
+    pub fn pif(&self) -> &Pif {
+        &self.pif
+    }
+
     pub fn read_word(&self, addr: u32) -> u32 {
         match map_addr(addr) {
             Addr::PifRom(offset) => self.pif.read_boot_rom(offset),
