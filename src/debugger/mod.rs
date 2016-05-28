@@ -32,6 +32,18 @@ impl Debugger {
     }
 
     pub fn step(&mut self) {
+        println!("{:018X}", self.n64.cpu().reg_pc());
+
+        /*match instr.opcode() {
+            Special => print!("Special: {:?}", instr.special_op()),
+            RegImm => print!("RegImm: {:?}", instr.reg_imm_op()),
+            _ => print!("{:?}", instr)
+        }
+        match delay_slot {
+            DelaySlot::Yes => println!(" (DELAY)"),
+            _ => println!("")
+        };*/
+
         self.n64.step();
     }
 }
@@ -39,5 +51,5 @@ impl Debugger {
 fn read_stdin() -> String {
     let mut input = String::new();
     stdin().read_line(&mut input).unwrap();
-    return input.trim().into();
+    input.trim().into()
 }

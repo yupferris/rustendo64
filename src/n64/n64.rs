@@ -16,6 +16,10 @@ impl N64 {
         }
     }
 
+    pub fn cpu(&self) -> &Cpu {
+        &self.cpu
+    }
+
     pub fn step(&mut self) {
         self.cpu.step();
     }
