@@ -10,6 +10,9 @@ extern crate enum_primitive;
 mod n64;
 mod debugger;
 
+use n64::*;
+use debugger::*;
+
 use std::env;
 use std::fs;
 use std::io::Read;
@@ -22,8 +25,8 @@ fn main() {
     let pif = read_bin(pif_file_name);
     let rom = read_bin(rom_file_name);
 
-    let n64 = n64::N64::new(pif, rom);
-    let mut debugger = debugger::Debugger::new(n64);
+    let n64 = N64::new(pif, rom);
+    let mut debugger = Debugger::new(n64);
     debugger.run();
 }
 

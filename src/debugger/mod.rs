@@ -19,17 +19,19 @@ impl Debugger {
 
     pub fn run(&mut self) {
         loop {
-            print!("n64> ");
+            print!("r64> ");
             stdout().flush().unwrap();
 
-            let input = read_stdin();
-            let command = input.parse();
-
+            let command = read_stdin().parse();
             match command {
-                Ok(Command::Step) => self.n64.run_instruction(),
+                Ok(Command::Step) => self.step(),
                 _ => println!("Invalid input")
             }
         }
+    }
+
+    pub fn step(&mut self) {
+        self.n64.step();
     }
 }
 
