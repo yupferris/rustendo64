@@ -8,6 +8,7 @@ extern crate num;
 extern crate enum_primitive;
 
 mod n64;
+mod debugger;
 
 use std::env;
 use std::fs;
@@ -21,11 +22,9 @@ fn main() {
     let pif = read_bin(pif_file_name);
     let rom = read_bin(rom_file_name);
 
-    let mut n64 = n64::N64::new(pif, rom);
-    loop {
-        //println!("N64: {:#?}", &n64);
-        n64.run_instruction();
-    }
+    let n64 = n64::N64::new(pif, rom);
+    let mut debugger = debugger::Debugger::new(n64);
+    debugger.run();
 }
 
 fn read_bin<P: AsRef<Path>>(path: P) -> Box<[u8]> {
