@@ -4,7 +4,7 @@ use std::str::FromStr;
 pub enum Command {
     Step,
     Exit,
-    Repeat
+    Repeat,
 }
 
 impl FromStr for Command {
@@ -16,7 +16,7 @@ impl FromStr for Command {
             "" => Ok(Command::Repeat),
             "step" | "s" => Ok(Command::Step),
             "exit" | "quit" | "e" | "q" => Ok(Command::Exit),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }

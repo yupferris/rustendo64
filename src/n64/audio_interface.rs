@@ -1,7 +1,7 @@
 #[derive(Default)]
 pub struct AudioInterface {
     dram_addr: u32,
-    length: u32
+    length: u32,
 }
 
 impl AudioInterface {

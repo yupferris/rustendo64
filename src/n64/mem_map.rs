@@ -72,7 +72,7 @@ pub enum Addr {
     PiBsdDom1PgsReg,
     PiBsdDom1RlsReg,
 
-    SiStatusReg
+    SiStatusReg,
 }
 
 pub fn map_addr(addr: u32) -> Addr {
@@ -111,6 +111,6 @@ pub fn map_addr(addr: u32) -> Addr {
 
         SI_STATUS_REG => Addr::SiStatusReg,
 
-        _ => panic!("Unrecognized physical address: {:#x}", addr)
+        _ => panic!("Unrecognized physical address: {:#x}", addr),
     }
 }

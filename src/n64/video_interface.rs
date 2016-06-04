@@ -3,7 +3,7 @@ pub struct VideoInterface {
     interrupt_half_line: u32,
 
     active_video_start: u32,
-    active_video_end: u32
+    active_video_end: u32,
 }
 
 impl VideoInterface {

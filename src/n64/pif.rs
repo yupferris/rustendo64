@@ -1,10 +1,10 @@
 use byteorder::{BigEndian, ByteOrder};
 
-use super::mem_map::*;
+use super::mem_map::PIF_RAM_LENGTH;
 
 pub struct Pif {
     boot_rom: Box<[u8]>,
-    ram: Box<[u8]>
+    ram: Box<[u8]>,
 }
 
 impl Pif {
@@ -12,7 +12,7 @@ impl Pif {
         Pif {
             boot_rom: boot_rom,
 
-            ram: vec![0; PIF_RAM_LENGTH as usize].into_boxed_slice()
+            ram: vec![0; PIF_RAM_LENGTH as usize].into_boxed_slice(),
         }
     }
 

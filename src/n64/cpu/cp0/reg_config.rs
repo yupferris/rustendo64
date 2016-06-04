@@ -7,7 +7,7 @@ pub struct RegConfig {
     endianness: Endianness,
 
     cu: bool,
-    kseg0_cache_enable_bits: [bool; 3]
+    kseg0_cache_enable_bits: [bool; 3],
 }
 
 impl RegConfig {
@@ -38,7 +38,7 @@ impl From<u32> for RegConfig {
 #[derive(Debug)]
 enum DataTransferPattern {
     Normal, // D
-    DxxDxx
+    DxxDxx,
 }
 
 impl Default for DataTransferPattern {
@@ -52,7 +52,7 @@ impl From<u32> for DataTransferPattern {
         match (value >> 24) & 0b1111 {
             0 => DataTransferPattern::Normal,
             6 => DataTransferPattern::DxxDxx,
-            _ => panic!("Invalid data transfer pattern (EP): {:#x}", value)
+            _ => panic!("Invalid data transfer pattern (EP): {:#x}", value),
         }
     }
 }
@@ -60,7 +60,7 @@ impl From<u32> for DataTransferPattern {
 #[derive(Debug)]
 enum Endianness {
     Little,
-    Big
+    Big,
 }
 
 impl Default for Endianness {
@@ -74,7 +74,7 @@ impl From<u32> for Endianness {
         match (value >> 15) & 0b1 {
             0 => Endianness::Little,
             1 => Endianness::Big,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }

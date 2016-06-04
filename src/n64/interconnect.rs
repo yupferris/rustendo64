@@ -1,13 +1,7 @@
 use byteorder::{BigEndian, ByteOrder};
 
-use super::pif::Pif;
-use super::rsp::Rsp;
-use super::rdp::Rdp;
-use super::audio_interface::AudioInterface;
-use super::video_interface::VideoInterface;
-use super::peripheral_interface::PeripheralInterface;
-use super::serial_interface::SerialInterface;
-use super::mem_map::*;
+use super::{AudioInterface, PeripheralInterface, Pif, Rdp, Rsp, SerialInterface, VideoInterface};
+use super::mem_map::{self, Addr};
 
 use std::fmt;
 
@@ -28,7 +22,7 @@ pub struct Interconnect {
 
     cart_rom: Box<[u8]>,
 
-    rdram: Box<[u16]>
+    rdram: Box<[u16]>,
 }
 
 impl Interconnect {
@@ -48,7 +42,7 @@ impl Interconnect {
 
             cart_rom: cart_rom,
 
-            rdram: vec![0; RDRAM_SIZE].into_boxed_slice()
+            rdram: vec![0; RDRAM_SIZE].into_boxed_slice(),
         }
     }
 
@@ -57,12 +51,11 @@ impl Interconnect {
     }
 
     pub fn read_word(&self, addr: u32) -> u32 {
-        match map_addr(addr) {
+        match mem_map::map_addr(addr) {
             Addr::PifRom(offset) => self.pif.read_boot_rom(offset),
             Addr::PifRam(offset) => self.pif.read_ram(offset),
 
-            Addr::CartDom1(offset) =>
-                BigEndian::read_u32(&self.cart_rom[offset as usize..]),
+            Addr::CartDom1(offset) => BigEndian::read_u32(&self.cart_rom[offset as usize..]),
 
             Addr::SpDmem(offset) => self.rsp.read_dmem(offset),
             Addr::SpImem(offset) => self.rsp.read_imem(offset),
@@ -85,12 +78,12 @@ impl Interconnect {
             Addr::PiBsdDom1PgsReg => self.pi.read_bsd_dom1_pgs_reg(),
             Addr::PiBsdDom1RlsReg => self.pi.read_bsd_dom1_rls_reg(),
 
-            Addr::SiStatusReg => self.si.read_status_reg()
+            Addr::SiStatusReg => self.si.read_status_reg(),
         }
     }
 
     pub fn write_word(&mut self, addr: u32, value: u32) {
-        match map_addr(addr) {
+        match mem_map::map_addr(addr) {
             Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
             Addr::PifRam(offset) => self.pif.write_ram(offset, value),
 
@@ -117,7 +110,7 @@ impl Interconnect {
             Addr::PiBsdDom1PgsReg => self.pi.write_bsd_dom1_pgs_reg(value),
             Addr::PiBsdDom1RlsReg => self.pi.write_bsd_dom1_rls_reg(value),
 
-            Addr::SiStatusReg => self.si.write_status_reg(value)
+            Addr::SiStatusReg => self.si.write_status_reg(value),
         }
     }
 }
