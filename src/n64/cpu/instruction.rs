@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::opcode::*;
+use super::opcode::{Opcode, RegImmOpcode, SpecialOpcode};
 
 use num::FromPrimitive;
 
@@ -11,8 +11,9 @@ impl Instruction {
     #[inline(always)]
     pub fn opcode(&self) -> Opcode {
         let value = (self.0 >> 26) & 0b111111;
-        Opcode::from_u32(value).unwrap_or_else(
-            || panic!("Unrecognized instruction: {:#010x} (op: {:#08b})", self.0, value))
+        Opcode::from_u32(value).unwrap_or_else(|| {
+            panic!("Unrecognized instruction: {:#010x} (op: {:#08b})", self.0, value)
+        })
     }
 
     #[inline(always)]
@@ -58,15 +59,17 @@ impl Instruction {
     #[inline(always)]
     pub fn special_op(&self) -> SpecialOpcode {
         let value = self.0 & 0b111111;
-        SpecialOpcode::from_u32(value).unwrap_or_else(
-            || panic!("Unrecognized special opcode: {:#010x} (op: {:#08b})", self.0, value))
+        SpecialOpcode::from_u32(value).unwrap_or_else(|| {
+            panic!("Unrecognized special opcode: {:#010x} (op: {:#08b})", self.0, value)
+        })
     }
 
     #[inline(always)]
     pub fn reg_imm_op(&self) -> RegImmOpcode {
         let value = (self.0 >> 16) & 0b11111;
-        RegImmOpcode::from_u32(value).unwrap_or_else(
-            || panic!("Unrecognized reg imm opcode: {:#010x} (op: {:#08b})", self.0, value))
+        RegImmOpcode::from_u32(value).unwrap_or_else(|| {
+            panic!("Unrecognized reg imm opcode: {:#010x} (op: {:#08b})", self.0, value)
+        })
     }
 }
 
@@ -74,7 +77,7 @@ impl fmt::Debug for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.opcode() {
             Opcode::Special => write!(f, "{:?}", self.special_op()),
-            _ => write!(f, "{:?}", self.opcode())
+            _ => write!(f, "{:?}", self.opcode()),
         }
     }
 }

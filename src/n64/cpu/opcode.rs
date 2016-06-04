@@ -21,7 +21,7 @@ enum_from_primitive! {
 
         Lw =      0b100011,
 
-        Sw =      0b101011
+        Sw =      0b101011,
     }
 }
 
@@ -50,13 +50,13 @@ enum_from_primitive! {
         Or =    0b100101,
         Xor =   0b100110,
 
-        Sltu =  0b101011
+        Sltu =  0b101011,
     }
 }
 
 enum_from_primitive! {
     #[derive(Debug)]
     pub enum RegImmOpcode {
-        Bgezal = 0b10001
+        Bgezal = 0b10001,
     }
 }

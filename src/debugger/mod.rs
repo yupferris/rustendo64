@@ -1,19 +1,18 @@
 mod command;
 
-use n64::*;
+use std::io::{stdin, stdout};
+use std::io::prelude::*;
+use n64::cpu::Instruction;
 use n64::cpu::opcode::Opcode::*;
-use n64::cpu::instruction::*;
-use n64::mem_map::*;
+use n64::mem_map;
 use n64::mem_map::Addr::*;
-
-use self::command::*;
-
-use std::io::*;
+use n64::N64;
+use self::command::Command;
 
 pub struct Debugger {
     n64: N64,
 
-    last_command: Option<Command>
+    last_command: Option<Command>,
 }
 
 impl Debugger {
@@ -21,7 +20,7 @@ impl Debugger {
         Debugger {
             n64: n64,
 
-            last_command: None
+            last_command: None,
         }
     }
 
@@ -34,14 +33,14 @@ impl Debugger {
                 (Ok(Command::Repeat), Some(c)) => Ok(c),
                 (Ok(Command::Repeat), None) => Err("No last command"),
                 (Ok(c), _) => Ok(c),
-                (Err(_), _) => Err("Invalid input")
+                (Err(_), _) => Err("Invalid input"),
             };
 
             match command {
                 Ok(Command::Step) => self.step(),
                 Ok(Command::Exit) => break,
                 Ok(Command::Repeat) => unreachable!(),
-                Err(e) => println!("{}", e)
+                Err(e) => println!("{}", e),
             }
 
             self.last_command = command.ok();
@@ -50,10 +49,10 @@ impl Debugger {
 
     pub fn step(&mut self) {
         let current_pc = self.n64.cpu().current_pc_phys();
-        let addr = map_addr(current_pc as u32);
+        let addr = mem_map::map_addr(current_pc as u32);
         let instr = Instruction(match addr {
             PifRom(offset) => self.n64.interconnect().pif().read_boot_rom(offset),
-            _ => panic!("Debugger can't inspect address: {:?}", addr)
+            _ => panic!("Debugger can't inspect address: {:?}", addr),
         });
 
         print!("{:018X}: ", current_pc);
@@ -61,7 +60,7 @@ impl Debugger {
         match instr.opcode() {
             Special => print!("{:?} (Special)", instr.special_op()),
             RegImm => print!("{:?} (RegImm)", instr.reg_imm_op()),
-            _ => print!("{:?}", instr)
+            _ => print!("{:?}", instr),
         }
 
         if self.n64.cpu().will_execute_from_delay_slot() {
