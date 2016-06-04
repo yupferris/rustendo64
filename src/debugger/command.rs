@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
-#[derive(Clone, Copy)]
+use nom::{IResult, eof};
+
+#[derive(Debug, Clone, Copy)]
 pub enum Command {
     Step,
     Exit,
@@ -8,15 +10,38 @@ pub enum Command {
 }
 
 impl FromStr for Command {
-    // TODO: Proper error type
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "" => Ok(Command::Repeat),
-            "step" | "s" => Ok(Command::Step),
-            "exit" | "quit" | "e" | "q" => Ok(Command::Exit),
-            _ => Err(()),
+        match command(s.as_bytes()) {
+            IResult::Done(_, c) => Ok(c),
+            err => Err(format!("Unable to parse command: {:?}", err))
         }
     }
 }
+
+named!(
+    command<Command>,
+    chain!(
+        c: alt_complete!(
+            step |
+            exit |
+            repeat) ~
+            eof,
+    || c));
+
+named!(
+    step<Command>,
+    map!(
+        alt_complete!(tag!("step") | tag!("s")),
+        |_| Command::Step));
+
+named!(
+    exit<Command>,
+    map!(
+        alt_complete!(tag!("exit") | tag!("quit") | tag!("e") | tag!("q")),
+        |_| Command::Exit));
+
+named!(
+    repeat<Command>,
+    value!(Command::Repeat));
