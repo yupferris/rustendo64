@@ -5,7 +5,7 @@
 Livecoding a Nintendo 64 emulator in Rust :D
 
 ## Follow along
-The entire process is currently being streamed on [Twitch](http://www.twitch.tv/ferrisstreamsstuff), and each segment is being recorded and uploaded to [this YouTube playlist](https://www.youtube.com/playlist?list=PL-sXmdrqqYYcznDg4xwAJWQgNL2gRray2). For stream times and announcements, you can check out [my Twitter](https://twitter.com/ferristweetsnow).
+This is a WIP emulator that we're building from scratch live. I haven't prepared hardly anything in advance before starting this endeavor (I'm new to the n64 hardware myself). The entire process is currently being streamed on [Twitch](http://www.twitch.tv/ferrisstreamsstuff), and each segment is being recorded and uploaded to [this YouTube playlist](https://www.youtube.com/playlist?list=PL-sXmdrqqYYcznDg4xwAJWQgNL2gRray2). For stream times and announcements, you can check out [my Twitter](https://twitter.com/ferristweetsnow).
 
 At the end of each episode, I mark the latest commit with a tag so you can see where we finished. Check the [releases](https://github.com/yupferris/rustendo64/releases) for this repo to see those.
 
