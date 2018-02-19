@@ -17,6 +17,9 @@ At the end of each episode, I mark the latest commit with a tag so you can see w
 ## Literature
 - [n64dev repo doc's](https://github.com/mikeryan/n64dev/tree/master/docs)
 - [VR4300 datasheet](http://datasheets.chipdb.org/NEC/Vr-Series/Vr43xx/U10504EJ7V0UMJ1.pdf)
+- [MIPS R4000 technical overview](https://www.hotchips.org/wp-content/uploads/hc_archives/hc03/2_Mon/HC3.S1/HC3.1.2.pdf)
+- [MIPS pipeline info](http://www.ece.ucsb.edu/~strukov/ece154aFall2013/viewgraphs/pipelinedMIPS.pdf)
+- [R3000 pipeline specification](https://www.researchgate.net/publication/2643911_Pipeline_Specification_of_a_MIPS_R3000_CPU) (not necessarily applicable to the VR4300, but very likely to be the same)
 - [Forum post where we found some boot info](http://www.emutalk.net/threads/53938-N64-tech-documentation)
 - [Detailed N64 memory map](http://infrid.com/rcp64/docfiles/n64maps.txt)
 - [Alternate MIPS register names](http://www.cs.umd.edu/class/sum2003/cmsc311/Notes/Mips/altReg.html)
