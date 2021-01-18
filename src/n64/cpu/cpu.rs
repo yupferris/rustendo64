@@ -1,8 +1,8 @@
-use super::{cp0, Instruction};
+use super::super::Interconnect;
 use super::opcode::Opcode::*;
 use super::opcode::RegImmOpcode::*;
 use super::opcode::SpecialOpcode::*;
-use super::super::Interconnect;
+use super::{cp0, Instruction};
 
 use std::fmt;
 
@@ -99,20 +99,18 @@ impl Cpu {
                         (rt >> sa) as u64
                     }),
 
-                    Sllv =>
-                        self.reg_instr(instr, |rs, rt, _| {
-                            // TODO: Check to see if this is actually sa
-                            let shift = rs & 0b11111;
-                            rt << shift
-                        }),
+                    Sllv => self.reg_instr(instr, |rs, rt, _| {
+                        // TODO: Check to see if this is actually sa
+                        let shift = rs & 0b11111;
+                        rt << shift
+                    }),
 
-                    Srlv =>
-                        self.reg_instr(instr, |rs, rt, _| {
-                            let rs = rs as u32;
-                            let rt = rt as u32;
-                            let shift = rs & 0b11111;
-                            (rt >> shift) as u64
-                        }),
+                    Srlv => self.reg_instr(instr, |rs, rt, _| {
+                        let rs = rs as u32;
+                        let rt = rt as u32;
+                        let shift = rs & 0b11111;
+                        (rt >> shift) as u64
+                    }),
 
                     Jr => {
                         let delay_slot_pc = self.reg_pc;
@@ -155,18 +153,19 @@ impl Cpu {
                 }
             }
 
-            RegImm => {
-                match instr.reg_imm_op() {
-                    Bgezal => { self.branch(instr, WriteLink::Yes, |rs, _| (rs as i64) >= 0); }
+            RegImm => match instr.reg_imm_op() {
+                Bgezal => {
+                    self.branch(instr, WriteLink::Yes, |rs, _| (rs as i64) >= 0);
                 }
-            }
+            },
 
-            Addi =>
-                self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| {
-                    // TODO: Handle overflow exception
-                    rs + imm_sign_extended
-                }),
-            Addiu => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| rs.wrapping_add(imm_sign_extended)),
+            Addi => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| {
+                // TODO: Handle overflow exception
+                rs + imm_sign_extended
+            }),
+            Addiu => self.imm_instr(instr, SignExtendResult::Yes, |rs, _, imm_sign_extended| {
+                rs.wrapping_add(imm_sign_extended)
+            }),
 
             Andi => self.imm_instr(instr, SignExtendResult::No, |rs, imm, _| rs & imm),
             Ori => self.imm_instr(instr, SignExtendResult::No, |rs, imm, _| rs | imm),
@@ -178,8 +177,12 @@ impl Cpu {
                 self.cp0.write_reg(instr.rd(), data);
             }
 
-            Beq => { self.branch(instr, WriteLink::No, |rs, rt| rs == rt); }
-            Bne => { self.branch(instr, WriteLink::No, |rs, rt| rs != rt); }
+            Beq => {
+                self.branch(instr, WriteLink::No, |rs, rt| rs == rt);
+            }
+            Bne => {
+                self.branch(instr, WriteLink::No, |rs, rt| rs != rt);
+            }
 
             Beql => self.branch_likely(instr, |rs, rt| rs == rt),
             Bnel => self.branch_likely(instr, |rs, rt| rs != rt),
@@ -205,7 +208,8 @@ impl Cpu {
     }
 
     fn imm_instr<F>(&mut self, instr: Instruction, sign_extend_result: SignExtendResult, f: F)
-        where F: FnOnce(u64, u64, u64) -> u64
+    where
+        F: FnOnce(u64, u64, u64) -> u64,
     {
         let rs = self.read_reg_gpr(instr.rs());
         let imm = instr.imm() as u64;
@@ -220,7 +224,8 @@ impl Cpu {
     }
 
     fn reg_instr<F>(&mut self, instr: Instruction, f: F)
-        where F: FnOnce(u64, u64, u32) -> u64
+    where
+        F: FnOnce(u64, u64, u32) -> u64,
     {
         let rs = self.read_reg_gpr(instr.rs());
         let rt = self.read_reg_gpr(instr.rt());
@@ -231,7 +236,8 @@ impl Cpu {
     }
 
     fn branch<F>(&mut self, instr: Instruction, write_link: WriteLink, f: F) -> bool
-        where F: FnOnce(u64, u64) -> bool
+    where
+        F: FnOnce(u64, u64) -> bool,
     {
         let rs = self.read_reg_gpr(instr.rs());
         let rt = self.read_reg_gpr(instr.rt());
@@ -256,7 +262,8 @@ impl Cpu {
     }
 
     fn branch_likely<F>(&mut self, instr: Instruction, f: F)
-        where F: FnOnce(u64, u64) -> bool
+    where
+        F: FnOnce(u64, u64) -> bool,
     {
         if !self.branch(instr, WriteLink::No, f) {
             // Skip over delay slot instruction when not branching
@@ -305,38 +312,41 @@ impl fmt::Debug for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const REGS_PER_LINE: usize = 2;
         const REG_NAMES: [&'static str; NUM_GPR] = [
-        "r0", "at", "v0", "v1", "a0", "a1", "a2", "a3",
-        "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
-        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
-        "t8", "t9", "k0", "k1", "gp", "sp", "s8", "ra",
+            "r0", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5",
+            "t6", "t7", "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "t8", "t9", "k0", "k1",
+            "gp", "sp", "s8", "ra",
         ];
 
-        try!(write!(f, "\nCPU General Purpose Registers:"));
+        write!(f, "\nCPU General Purpose Registers:")?;
         for reg_num in 0..NUM_GPR {
             if (reg_num % REGS_PER_LINE) == 0 {
-                try!(writeln!(f, ""));
+                writeln!(f, "")?;
             }
-            try!(write!(f,
+            write!(
+                f,
                 "{reg_name}/gpr{num:02}: {value:#018X} ",
                 num = reg_num,
                 reg_name = REG_NAMES[reg_num],
                 value = self.reg_gpr[reg_num],
-            ));
+            )?;
         }
 
-        try!(write!(f, "\n\nCPU Floating Point Registers:"));
+        write!(f, "\n\nCPU Floating Point Registers:")?;
         for reg_num in 0..NUM_GPR {
             if (reg_num % REGS_PER_LINE) == 0 {
-                try!(writeln!(f, ""));
+                writeln!(f, "")?;
             }
-            try!(write!(f,
+            write!(
+                f,
                 "fpr{num:02}: {value:21} ",
                 num = reg_num,
-                value = self.reg_fpr[reg_num]));
+                value = self.reg_fpr[reg_num]
+            )?;
         }
 
-        try!(writeln!(f, "\n\nCPU Special Registers:"));
-        try!(writeln!(f,
+        writeln!(f, "\n\nCPU Special Registers:")?;
+        writeln!(
+            f,
             "\
             reg_pc: {:#018X}\n\
             reg_hi: {:#018X}\n\
@@ -345,13 +355,8 @@ impl fmt::Debug for Cpu {
             reg_fcr0:  {:#010X}\n\
             reg_fcr31: {:#010X}\n\
             ",
-            self.reg_pc,
-            self.reg_hi,
-            self.reg_lo,
-            self.reg_llbit,
-            self.reg_fcr0,
-            self.reg_fcr31
-        ));
+            self.reg_pc, self.reg_hi, self.reg_lo, self.reg_llbit, self.reg_fcr0, self.reg_fcr31
+        )?;
 
         writeln!(f, "{:#?}", self.cp0)
     }
