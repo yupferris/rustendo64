@@ -3,9 +3,10 @@ name = "rustendo64"
 version = "0.1.0"
 authors = ["ferris <jake@fusetools.com>"]
 license = "MIT/Apache-2.0"
+edition = "2018"
 
 [dependencies]
-byteorder = "0.4.2"
-num = "0.1.30"
-enum_primitive = "0.1.0"
+byteorder = "1.4.2"
+num = "0.3.1"
+enum_primitive = "0.1.1"
 nom = "^1.2.3"

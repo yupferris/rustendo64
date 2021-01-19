@@ -1,14 +1,15 @@
 mod command;
 
-use std::io::{stdin, stdout};
-use std::io::prelude::*;
-use std::borrow::Cow;
-use n64::cpu::Instruction;
+use crate::n64;
+
+use self::command::Command;
 use n64::cpu::opcode::Opcode::*;
+use n64::cpu::Instruction;
 use n64::mem_map;
 use n64::mem_map::Addr::*;
 use n64::N64;
-use self::command::Command;
+use std::io::prelude::*;
+use std::io::{stdin, stdout};
 
 pub struct Debugger {
     n64: N64,
