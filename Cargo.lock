@@ -23,9 +23,9 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "1.2.3"
+version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1b06a35295796400a1db7382054f93713bf3924e7c268af94c5357b9fbf4cb6"
+checksum = "a5b8c256fd9471521bcb84c3cdba98921497f1a331cbc15b8030fc63b82050ce"
 
 [[package]]
 name = "num"
