@@ -1,7 +1,7 @@
 use byteorder::{BigEndian, ByteOrder};
 
-use super::{AudioInterface, PeripheralInterface, Pif, Rdp, Rsp, SerialInterface, VideoInterface};
 use super::mem_map::{self, Addr};
+use super::{AudioInterface, PeripheralInterface, Pif, Rdp, Rsp, SerialInterface, VideoInterface};
 
 use std::fmt;
 
@@ -87,7 +87,7 @@ impl Interconnect {
             Addr::PifRom(_) => panic!("Cannot write to PIF ROM"),
             Addr::PifRam(offset) => self.pif.write_ram(offset, value),
 
-            Addr::CartDom1(offset) => panic!("Cannot write to cart ROM"),
+            Addr::CartDom1(_) => panic!("Cannot write to cart ROM"),
 
             Addr::SpDmem(offset) => self.rsp.write_dmem(offset, value),
             Addr::SpImem(offset) => self.rsp.write_imem(offset, value),
